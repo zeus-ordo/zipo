@@ -1,0 +1,422 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const client_1 = require("@prisma/client");
+const auth_1 = require("../../middleware/auth");
+const tenant_1 = require("../../middleware/tenant");
+const prisma = new client_1.PrismaClient({});
+const router = (0, express_1.Router)();
+const validTransitions = {
+    confirmed: ['ready_to_ship', 'cancelled'],
+    ready_to_ship: ['shipped', 'cancelled'],
+    shipped: ['cancelled'],
+    cancelled: [],
+};
+router.use(auth_1.authenticate, tenant_1.requireTenant);
+router.get('/order-drafts', async (req, res) => {
+    try {
+        const tenantId = req.user.tenantId;
+        const { status, page = '1', limit = '20' } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        const take = parseInt(limit);
+        const where = { tenantId };
+        if (status) {
+            where.status = status;
+        }
+        const [drafts, total] = await Promise.all([
+            prisma.orderDraft.findMany({
+                where,
+                skip,
+                take,
+                orderBy: { createdAt: 'desc' },
+                include: {
+                    items: true,
+                    customer: true,
+                },
+            }),
+            prisma.orderDraft.count({ where }),
+        ]);
+        res.json({
+            data: drafts,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                totalPages: Math.ceil(total / take),
+            },
+        });
+    }
+    catch (error) {
+        console.error('Error fetching order drafts:', error);
+        res.status(500).json({ error: '取得訂單草稿失敗' });
+    }
+});
+router.get('/order-drafts/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const tenantId = req.user.tenantId;
+        const draft = await prisma.orderDraft.findFirst({
+            where: { id, tenantId },
+            include: {
+                items: true,
+                customer: true,
+                conversation: true,
+            },
+        });
+        if (!draft) {
+            res.status(404).json({ error: '找不到訂單草稿' });
+            return;
+        }
+        res.json(draft);
+    }
+    catch (error) {
+        console.error('Error fetching order draft:', error);
+        res.status(500).json({ error: '取得訂單草稿失敗' });
+    }
+});
+router.patch('/order-drafts/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const tenantId = req.user.tenantId;
+        const { items, status, summaryForStaff, replySuggestion } = req.body;
+        const existing = await prisma.orderDraft.findFirst({
+            where: { id, tenantId },
+            include: { items: true },
+        });
+        if (!existing) {
+            res.status(404).json({ error: '找不到訂單草稿' });
+            return;
+        }
+        const updateData = { updatedAt: new Date() };
+        if (status !== undefined)
+            updateData.status = status;
+        if (summaryForStaff !== undefined)
+            updateData.summaryForStaff = summaryForStaff;
+        if (replySuggestion !== undefined)
+            updateData.replySuggestion = replySuggestion;
+        if (items && Array.isArray(items)) {
+            for (const item of items) {
+                if (item.id) {
+                    await prisma.orderDraftItem.update({
+                        where: { id: item.id },
+                        data: {
+                            matchedProductId: item.matchedProductId,
+                            matchedVariantId: item.matchedVariantId,
+                            rawText: item.rawText,
+                            name: item.name,
+                            color: item.color,
+                            size: item.size,
+                            quantity: item.quantity,
+                            unitPrice: item.unitPrice,
+                            isFuzzy: item.isFuzzy,
+                            updatedAt: new Date(),
+                        },
+                    });
+                }
+            }
+        }
+        const updated = await prisma.orderDraft.update({
+            where: { id },
+            data: updateData,
+            include: {
+                items: true,
+                customer: true,
+            },
+        });
+        await prisma.auditLog.create({
+            data: {
+                userId: req.user.userId,
+                tenantId,
+                action: 'UPDATE_ORDER_DRAFT',
+                entityType: 'OrderDraft',
+                entityId: id,
+                metadata: JSON.stringify(req.body),
+            },
+        }).catch(console.error);
+        res.json(updated);
+    }
+    catch (error) {
+        console.error('Error updating order draft:', error);
+        res.status(500).json({ error: '更新訂單草稿失敗' });
+    }
+});
+router.post('/order-drafts/:id/confirm', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const tenantId = req.user.tenantId;
+        const userId = req.user.userId;
+        const { recipientName, recipientPhone, recipientAddress, deliveryMethod, paymentMethod } = req.body;
+        const draft = await prisma.orderDraft.findFirst({
+            where: { id, tenantId },
+            include: {
+                items: true,
+                customer: true,
+            },
+        });
+        if (!draft) {
+            res.status(404).json({ error: '找不到訂單草稿' });
+            return;
+        }
+        if (draft.status !== 'draft_needs_review' && draft.status !== 'draft_ready_to_confirm') {
+            res.status(400).json({ error: '草稿狀態不正確，無法確認' });
+            return;
+        }
+        if (!recipientPhone || !recipientAddress) {
+            res.status(400).json({ error: '收件人電話和地址為必填欄位' });
+            return;
+        }
+        const order = await prisma.order.create({
+            data: {
+                tenantId,
+                orderDraftId: draft.id,
+                customerId: draft.customerId,
+                status: 'confirmed',
+                confirmedByUserId: userId,
+                confirmedAt: new Date(),
+                recipientName: recipientName || null,
+                recipientPhone,
+                recipientAddress,
+                deliveryMethod: deliveryMethod || null,
+                paymentMethod: paymentMethod || null,
+            },
+        });
+        for (const item of draft.items) {
+            await prisma.orderItem.create({
+                data: {
+                    tenantId,
+                    orderId: order.id,
+                    productId: item.matchedProductId,
+                    variantId: item.matchedVariantId,
+                    rawText: item.rawText,
+                    name: item.name,
+                    color: item.color,
+                    size: item.size,
+                    quantity: item.quantity,
+                    unitPrice: item.unitPrice,
+                    lineTotal: item.quantity && item.unitPrice ? item.quantity * item.unitPrice : null,
+                    isFuzzy: item.isFuzzy,
+                },
+            });
+        }
+        await prisma.orderDraft.delete({ where: { id } });
+        await prisma.auditLog.create({
+            data: {
+                userId,
+                tenantId,
+                action: 'CONFIRM_ORDER_DRAFT',
+                entityType: 'Order',
+                entityId: order.id,
+                metadata: JSON.stringify({ draftId: id }),
+            },
+        }).catch(console.error);
+        const createdOrder = await prisma.order.findUnique({
+            where: { id: order.id },
+            include: { items: true },
+        });
+        res.status(201).json(createdOrder);
+    }
+    catch (error) {
+        console.error('Error confirming order draft:', error);
+        res.status(500).json({ error: '確認訂單草稿失敗' });
+    }
+});
+router.delete('/order-drafts/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const tenantId = req.user.tenantId;
+        const existing = await prisma.orderDraft.findFirst({
+            where: { id, tenantId },
+        });
+        if (!existing) {
+            res.status(404).json({ error: '找不到訂單草稿' });
+            return;
+        }
+        await prisma.orderDraft.delete({ where: { id } });
+        await prisma.auditLog.create({
+            data: {
+                userId: req.user.userId,
+                tenantId,
+                action: 'DELETE_ORDER_DRAFT',
+                entityType: 'OrderDraft',
+                entityId: id,
+            },
+        }).catch(console.error);
+        res.status(204).send();
+    }
+    catch (error) {
+        console.error('Error deleting order draft:', error);
+        res.status(500).json({ error: '刪除訂單草稿失敗' });
+    }
+});
+router.get('/orders', async (req, res) => {
+    try {
+        const tenantId = req.user.tenantId;
+        const { status, page = '1', limit = '20' } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        const take = parseInt(limit);
+        const where = { tenantId };
+        if (status) {
+            where.status = status;
+        }
+        const [orders, total] = await Promise.all([
+            prisma.order.findMany({
+                where,
+                skip,
+                take,
+                orderBy: { createdAt: 'desc' },
+                include: {
+                    items: true,
+                    customer: true,
+                },
+            }),
+            prisma.order.count({ where }),
+        ]);
+        res.json({
+            data: orders,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                totalPages: Math.ceil(total / take),
+            },
+        });
+    }
+    catch (error) {
+        console.error('Error fetching orders:', error);
+        res.status(500).json({ error: '取得訂單失敗' });
+    }
+});
+router.get('/orders/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const tenantId = req.user.tenantId;
+        const order = await prisma.order.findFirst({
+            where: { id, tenantId },
+            include: {
+                items: true,
+                customer: true,
+            },
+        });
+        if (!order) {
+            res.status(404).json({ error: '找不到訂單' });
+            return;
+        }
+        res.json(order);
+    }
+    catch (error) {
+        console.error('Error fetching order:', error);
+        res.status(500).json({ error: '取得訂單失敗' });
+    }
+});
+router.patch('/orders/:id/status', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const tenantId = req.user.tenantId;
+        const { status: newStatus } = req.body;
+        if (!newStatus) {
+            res.status(400).json({ error: '狀態為必填欄位' });
+            return;
+        }
+        const order = await prisma.order.findFirst({
+            where: { id, tenantId },
+        });
+        if (!order) {
+            res.status(404).json({ error: '找不到訂單' });
+            return;
+        }
+        const allowedTransitions = validTransitions[order.status] || [];
+        if (!allowedTransitions.includes(newStatus)) {
+            res.status(400).json({
+                error: `無法從 ${order.status} 轉換到 ${newStatus}`,
+                allowedTransitions,
+            });
+            return;
+        }
+        const updated = await prisma.order.update({
+            where: { id },
+            data: {
+                status: newStatus,
+                updatedAt: new Date(),
+            },
+            include: {
+                items: true,
+                customer: true,
+            },
+        });
+        await prisma.auditLog.create({
+            data: {
+                userId: req.user.userId,
+                tenantId,
+                action: 'UPDATE_ORDER_STATUS',
+                entityType: 'Order',
+                entityId: id,
+                metadata: JSON.stringify({ from: order.status, to: newStatus }),
+            },
+        }).catch(console.error);
+        res.json(updated);
+    }
+    catch (error) {
+        console.error('Error updating order status:', error);
+        res.status(500).json({ error: '更新訂單狀態失敗' });
+    }
+});
+router.patch('/orders/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const tenantId = req.user.tenantId;
+        const { recipientName, recipientPhone, recipientAddress, deliveryMethod, deliveryNote, paymentMethod, paymentStatus, paymentLastFiveDigits, paymentNote, staffNote, } = req.body;
+        const existing = await prisma.order.findFirst({
+            where: { id, tenantId },
+        });
+        if (!existing) {
+            res.status(404).json({ error: '找不到訂單' });
+            return;
+        }
+        const updateData = { updatedAt: new Date() };
+        if (recipientName !== undefined)
+            updateData.recipientName = recipientName;
+        if (recipientPhone !== undefined)
+            updateData.recipientPhone = recipientPhone;
+        if (recipientAddress !== undefined)
+            updateData.recipientAddress = recipientAddress;
+        if (deliveryMethod !== undefined)
+            updateData.deliveryMethod = deliveryMethod;
+        if (deliveryNote !== undefined)
+            updateData.deliveryNote = deliveryNote;
+        if (paymentMethod !== undefined)
+            updateData.paymentMethod = paymentMethod;
+        if (paymentStatus !== undefined)
+            updateData.paymentStatus = paymentStatus;
+        if (paymentLastFiveDigits !== undefined)
+            updateData.paymentLastFiveDigits = paymentLastFiveDigits;
+        if (paymentNote !== undefined)
+            updateData.paymentNote = paymentNote;
+        if (staffNote !== undefined)
+            updateData.staffNote = staffNote;
+        const updated = await prisma.order.update({
+            where: { id },
+            data: updateData,
+            include: {
+                items: true,
+                customer: true,
+            },
+        });
+        await prisma.auditLog.create({
+            data: {
+                userId: req.user.userId,
+                tenantId,
+                action: 'UPDATE_ORDER',
+                entityType: 'Order',
+                entityId: id,
+                metadata: JSON.stringify(req.body),
+            },
+        }).catch(console.error);
+        res.json(updated);
+    }
+    catch (error) {
+        console.error('Error updating order:', error);
+        res.status(500).json({ error: '更新訂單失敗' });
+    }
+});
+exports.default = router;
+//# sourceMappingURL=routes.js.map

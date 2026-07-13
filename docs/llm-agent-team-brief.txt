@@ -1,0 +1,658 @@
+服飾業 LINE AI 接單客服 SaaS - LLM Agent 團隊工程文件
+
+版本：v0.1
+日期：2026-07-04
+文件目的：提供 LLM Agent 團隊與工程團隊作為開發依據。
+
+
+1. 專案目標
+
+本專案要打造一套提供給多家服飾店使用的 LINE AI 接單客服 SaaS。
+
+系統會串接每家店自己的 LINE 官方帳號，接收客戶透過 LINE@ 傳來的下單訊息。LLM Agent 負責從對話中整理客戶想買的商品、規格、數量、付款與配送資訊，產生訂單草稿或模糊確認單，再交由真人客服或店家在後台確認。
+
+第一版不追求完全自動化，而是先讓 LLM 成為客服接單助理，降低真人整理訂單的時間與錯誤率。
+
+
+2. MVP 範圍
+
+第一版必須完成：
+
+- 多店家 SaaS 架構。
+- 每家店串接自己的 LINE 官方帳號 Channel。
+- 接收 LINE Webhook 訊息。
+- 儲存客戶對話紀錄。
+- LLM Agent 從對話中產生訂單草稿。
+- 支援精準商品草稿與模糊商品草稿。
+- 店家後台可查看、編輯、確認訂單草稿。
+- 人工確認後建立正式訂單。
+- 後台可管理訂單狀態與出貨狀態。
+- 商品資料可透過 Excel / Google Sheet 匯入。
+- 商品資料也可在後台手動新增與修改。
+- 有新草稿或新訂單時，可透過 LINE 推播通知店家指定接收者。
+- 付款與出貨資訊使用標準欄位，但不串接金流或物流。
+
+
+3. 第一版明確不做
+
+以下項目不放入第一版：
+
+- 庫存管理。
+- 自動扣庫存。
+- 可售數檢查。
+- 缺貨判斷。
+- 金流 API 串接。
+- 物流 API 串接。
+- 電子發票。
+- 會員點數。
+- 優惠券。
+- 完整 CRM。
+- 自動退換貨。
+- 複雜報表。
+- 多語系。
+- 平台共用 LINE 官方帳號入口。
+- 客戶確認後全自動建立正式訂單。
+
+注意：自動成單、庫存、金流、物流需要在資料模型與模組邊界上保留未來擴充空間，但不得讓第一版開發範圍膨脹。
+
+
+4. 使用者角色
+
+4.1 平台管理員
+
+負責管理 SaaS 平台中的所有店家、方案、LINE 串接狀態、系統用量與錯誤紀錄。
+
+4.2 店家管理員
+
+負責設定店鋪資料、LINE Channel、商品資料、付款配送方式與通知接收者。
+
+4.3 店員 / 客服
+
+負責查看 LLM 產生的訂單草稿，補充或修正資訊，確認後建立正式訂單，並處理出貨狀態。
+
+4.4 消費者
+
+透過店家的 LINE@ 傳送下單訊息、補充收件與付款資料。
+
+4.5 LLM Agent
+
+負責分析對話、擷取訂單資訊、判斷缺漏欄位、產生追問訊息、產生後台用結構化資料與客戶確認文字。
+
+
+5. 核心業務流程
+
+流程如下：
+
+1. 消費者透過店家 LINE@ 傳訊息。
+2. LINE Webhook 將訊息送到系統。
+3. 系統根據 LINE Channel 判斷 tenant_id。
+4. 系統儲存 Conversation 與 Message。
+5. 系統觸發 LLM Extraction。
+6. LLM Agent 判斷是否為下單意圖。
+7. 若不是下單意圖，依店家設定回覆一般客服訊息或交由真人處理。
+8. 若是下單意圖，LLM Agent 擷取商品、規格、數量、付款、配送與客戶資訊。
+9. 若資訊不足，產生追問訊息回覆客戶。
+10. 若資訊足夠或需要人工判斷，建立 OrderDraft。
+11. 店家後台顯示 OrderDraft。
+12. 系統 LINE 推播通知店家指定接收者。
+13. 店員在後台編輯與確認草稿。
+14. 系統建立正式 Order。
+15. 店家人工處理付款、出貨與狀態更新。
+
+
+6. LINE Webhook 流程
+
+每個店家都使用自己的 LINE 官方帳號 Channel。
+
+每家店需要保存以下設定：
+
+- tenant_id
+- channel_id
+- channel_secret
+- channel_access_token
+- webhook_url
+- webhook_enabled
+- webhook_verified_at
+
+Webhook 處理要求：
+
+1. 驗證 LINE signature。
+2. 根據 Channel 設定查找 tenant_id。
+3. 若找不到 tenant_id，記錄錯誤並拒絕處理。
+4. 儲存原始 webhook payload 供除錯。
+5. 儲存 customer、conversation、message。
+6. 將訊息送入 LLM Extraction queue。
+7. Webhook endpoint 必須快速回應 LINE，避免因 LLM 處理時間過長導致 timeout。
+
+
+7. LLM Agent 職責
+
+LLM Agent 只負責接單輔助，不負責高風險決策。
+
+LLM Agent 必須負責：
+
+- 判斷客戶是否有下單意圖。
+- 擷取商品名稱或商品描述。
+- 擷取顏色、尺寸、規格、數量。
+- 嘗試比對店家商品資料。
+- 標記商品是否為模糊商品。
+- 保留客戶原始說法。
+- 擷取收件人姓名、電話、地址、超商門市等資料。
+- 擷取配送方式。
+- 擷取付款方式、付款後五碼與付款備註。
+- 判斷缺少哪些必要欄位。
+- 產生下一句追問訊息。
+- 產生訂單確認文字。
+- 產生後台用 JSON。
+- 標記是否需要人工審核。
+
+LLM Agent 不得負責：
+
+- 自動扣庫存。
+- 判斷商品是否有貨。
+- 承諾一定可出貨。
+- 自動收款。
+- 自動退款。
+- 自動取消訂單。
+- 自動承諾到貨日期。
+- 取代真人確認正式訂單。
+
+
+8. LLM Agent 輸入資料
+
+送給 LLM Agent 的上下文應包含：
+
+- tenant_id。
+- store_name。
+- customer LINE profile。
+- 最近 N 則對話訊息。
+- 店家啟用的付款方式。
+- 店家啟用的配送方式。
+- 店家客服話術設定。
+- 相關商品候選資料。
+- 目前尚未完成的 OrderDraft。
+
+商品候選資料不應一次塞入全量商品。建議先由系統做 keyword search / vector search / fuzzy search，再把 Top K 商品候選交給 LLM 判斷。
+
+
+9. LLM Agent JSON 輸出格式
+
+LLM Agent 必須輸出可被程式解析的 JSON。不得只輸出自然語言。
+
+建議格式：
+
+{
+  "intent": "place_order",
+  "confidence": 0.86,
+  "needs_human_review": true,
+  "draft_action": "create_or_update",
+  "missing_fields": ["recipient_phone", "delivery_method"],
+  "items": [
+    {
+      "matched_product_id": null,
+      "matched_variant_id": null,
+      "raw_text": "昨天直播黑色洋裝",
+      "name": "黑色洋裝",
+      "color": "黑色",
+      "size": "M",
+      "quantity": 1,
+      "unit_price": null,
+      "is_fuzzy": true,
+      "fuzzy_reason": "客戶以直播描述下單，未精準對應商品資料"
+    }
+  ],
+  "customer_info": {
+    "name": null,
+    "phone": null,
+    "address": null,
+    "line_display_name": "王小美"
+  },
+  "payment": {
+    "method": null,
+    "last_five_digits": null,
+    "status": "unknown",
+    "note": null
+  },
+  "delivery": {
+    "method": null,
+    "address": null,
+    "store_pickup_info": null,
+    "note": "客人提到超商取貨"
+  },
+  "summary_for_staff": "客人想買昨天直播黑色洋裝 M 1 件，但尚未提供電話與配送方式。",
+  "reply_suggestion": "幫您整理如下：黑色洋裝 M 1 件。請問收件姓名、電話與取貨門市是？",
+  "risk_flags": ["fuzzy_product"]
+}
+
+intent 可用值：
+
+- place_order
+- update_order_info
+- ask_product_question
+- payment_info
+- delivery_info
+- cancel_order
+- general_message
+- unknown
+
+draft_action 可用值：
+
+- create_or_update
+- ask_followup
+- no_action
+- escalate_to_human
+
+
+10. 模糊訂單規則
+
+服飾業常見模糊描述包含：
+
+- 昨天直播那件。
+- 闆娘穿的那套。
+- 黑色洋裝 M。
+- 圖片第一件。
+- 上次問的白色上衣。
+
+如果商品無法精準對應 Product 或 ProductVariant，系統仍需建立 OrderDraft，但不得建立已確認訂單。
+
+模糊訂單必須包含：
+
+- raw_text：客戶原始說法。
+- parsed_name：LLM 整理後名稱。
+- color。
+- size。
+- quantity。
+- fuzzy_reason。
+- needs_human_review = true。
+
+
+11. 商品資料設計
+
+第一版商品不含庫存。
+
+Product 建議欄位：
+
+- id
+- tenant_id
+- sku
+- name
+- category
+- description
+- base_price
+- is_active
+- source_type：manual / excel / google_sheet
+- source_ref
+- created_at
+- updated_at
+
+ProductVariant 建議欄位：
+
+- id
+- tenant_id
+- product_id
+- variant_sku
+- color
+- size
+- price
+- is_active
+- created_at
+- updated_at
+
+注意：不得在第一版加入 stock_quantity 作為核心流程依賴。若資料表需要未來擴充，可另開 inventory 模組，不要把第一版接單流程綁死在庫存上。
+
+
+12. 訂單資料模型
+
+OrderDraft 建議欄位：
+
+- id
+- tenant_id
+- customer_id
+- conversation_id
+- status
+- source：line
+- llm_confidence
+- needs_human_review
+- missing_fields
+- summary_for_staff
+- reply_suggestion
+- raw_llm_output
+- created_at
+- updated_at
+
+OrderDraftItem 建議欄位：
+
+- id
+- tenant_id
+- order_draft_id
+- matched_product_id
+- matched_variant_id
+- raw_text
+- name
+- color
+- size
+- quantity
+- unit_price
+- is_fuzzy
+- fuzzy_reason
+
+Order 建議欄位：
+
+- id
+- tenant_id
+- order_draft_id
+- customer_id
+- status
+- recipient_name
+- recipient_phone
+- recipient_address
+- delivery_method
+- delivery_note
+- payment_method
+- payment_status
+- payment_last_five_digits
+- payment_note
+- staff_note
+- confirmed_by_user_id
+- confirmed_at
+- created_at
+- updated_at
+
+OrderItem 建議欄位：
+
+- id
+- tenant_id
+- order_id
+- product_id
+- variant_id
+- raw_text
+- name
+- color
+- size
+- quantity
+- unit_price
+- line_total
+- is_fuzzy
+
+
+13. 訂單狀態機
+
+OrderDraft status：
+
+- draft_pending_info：草稿缺少必要資訊。
+- draft_needs_review：草稿需人工確認。
+- draft_ready_to_confirm：資訊足夠，可由人工確認。
+- draft_cancelled：草稿取消。
+
+Order status：
+
+- confirmed：已由真人確認。
+- ready_to_ship：待出貨。
+- shipped：已出貨。
+- cancelled：已取消。
+
+狀態轉移規則：
+
+- OrderDraft 只能由真人確認後轉為 Order。
+- 模糊商品 OrderDraft 必須 needs_human_review = true。
+- 第一版禁止客戶 LINE 回覆確認後直接建立 Order。
+- 未來可新增 auto_confirmed 狀態，但第一版不要啟用。
+
+
+14. 後台功能清單
+
+店家後台：
+
+- 登入。
+- 儀表板。
+- 訂單草稿列表。
+- 訂單草稿詳情。
+- 草稿編輯。
+- 草稿確認成正式訂單。
+- 正式訂單列表。
+- 正式訂單詳情。
+- 出貨狀態更新。
+- 商品列表。
+- 商品新增 / 編輯 / 停用。
+- Excel 匯入商品。
+- Google Sheet 匯入商品。
+- LINE Channel 設定。
+- LINE Webhook 驗證狀態。
+- 通知接收者設定。
+- 店鋪付款方式設定。
+- 店鋪配送方式設定。
+- 客服話術設定。
+
+平台管理後台：
+
+- 店家列表。
+- 新增店家。
+- 停用店家。
+- 查看店家 LINE 串接狀態。
+- 查看 LLM 用量。
+- 查看訊息量。
+- 查看錯誤紀錄。
+- 管理平台管理員。
+
+
+15. API 模組建議
+
+建議拆分模組：
+
+- AuthModule
+- TenantModule
+- UserModule
+- LineWebhookModule
+- ConversationModule
+- LlmExtractionModule
+- ProductModule
+- ProductImportModule
+- OrderDraftModule
+- OrderModule
+- NotificationModule
+- StoreSettingModule
+- AdminModule
+- AuditLogModule
+
+重要 API 類型：
+
+- POST /webhooks/line/{channel_id}
+- GET /admin/tenants
+- POST /admin/tenants
+- GET /merchant/order-drafts
+- GET /merchant/order-drafts/{id}
+- PATCH /merchant/order-drafts/{id}
+- POST /merchant/order-drafts/{id}/confirm
+- GET /merchant/orders
+- GET /merchant/orders/{id}
+- PATCH /merchant/orders/{id}/status
+- GET /merchant/products
+- POST /merchant/products
+- PATCH /merchant/products/{id}
+- POST /merchant/products/import
+- GET /merchant/settings/line
+- PATCH /merchant/settings/line
+- GET /merchant/settings/notifications
+- PATCH /merchant/settings/notifications
+
+
+16. 通知流程
+
+第一版通知方式：
+
+- 後台即時訂單列表。
+- LINE 推播通知店家指定接收者。
+
+通知觸發時機：
+
+- 新 OrderDraft 建立且 needs_human_review = true。
+- OrderDraft 已可確認。
+- 正式 Order 建立。
+- LLM 處理失敗需要人工介入。
+
+通知內容範例：
+
+你有一筆新的待確認訂單
+
+客戶：王小美
+內容：昨天直播黑色洋裝 / M / 1 件
+狀態：需人工確認
+請至後台查看與確認。
+
+
+17. 權限與資料隔離要求
+
+所有核心資料必須有 tenant_id。
+
+包含：
+
+- users
+- line_channels
+- customers
+- conversations
+- messages
+- products
+- product_variants
+- order_drafts
+- order_draft_items
+- orders
+- order_items
+- notification_targets
+- store_settings
+- audit_logs
+
+要求：
+
+- 店家使用者只能看到自己 tenant_id 的資料。
+- 平台管理員才可以跨 tenant 查詢。
+- LINE Webhook 必須正確歸屬 tenant_id。
+- 任一 API 都不得只靠前端傳入 tenant_id 來授權。
+- tenant_id 必須由登入 session 或 webhook channel mapping 決定。
+- 重要操作必須寫入 audit log。
+
+
+18. 錯誤處理要求
+
+LINE Webhook 錯誤：
+
+- signature 驗證失敗：拒絕並記錄。
+- channel 找不到 tenant：拒絕並記錄。
+- payload 格式異常：記錄 raw payload。
+
+LLM 錯誤：
+
+- LLM timeout：標記 conversation 需人工處理。
+- JSON parse 失敗：保存原始輸出並標記需人工處理。
+- confidence 過低：建立人工審核草稿或不建立草稿。
+- 商品比對失敗：建立模糊草稿。
+
+通知錯誤：
+
+- LINE push 失敗需記錄。
+- 不應阻擋訂單草稿建立。
+
+
+19. 測試重點
+
+必測案例：
+
+- LINE Webhook signature 驗證。
+- Webhook 正確映射 tenant_id。
+- 不同店家的資料不可互相讀取。
+- 客戶明確下單可建立 OrderDraft。
+- 客戶模糊下單可建立模糊 OrderDraft。
+- 商品精準匹配時能填入 matched_product_id。
+- 商品無法匹配時 matched_product_id = null 且 is_fuzzy = true。
+- 缺少電話或配送方式時 missing_fields 正確。
+- LLM JSON parse 失敗時不應讓系統崩潰。
+- 真人確認草稿後建立 Order。
+- 模糊草稿不得自動成正式 Order。
+- 訂單狀態轉移符合規則。
+- 新草稿可通知店家。
+- 通知失敗不影響草稿建立。
+- Excel / Google Sheet 匯入商品。
+
+
+20. 未來擴充保留點
+
+未來可新增：
+
+- 客戶 LINE 確認後自動成單。
+- 庫存管理。
+- 自動扣庫存。
+- 金流串接。
+- 物流串接。
+- 電子發票。
+- 直播留言接單。
+- 商品向量搜尋。
+- AI 客服知識庫。
+- 方案收費與用量計費。
+- CRM 與顧客標籤。
+
+第一版開發時需注意模組邊界，避免未來擴充時大規模重寫。
+
+
+21. 開發優先順序建議
+
+Phase 1：SaaS 基礎與 LINE 收訊
+
+- Tenant / User / Auth。
+- 每店 LINE Channel 設定。
+- LINE Webhook endpoint。
+- Conversation / Message 儲存。
+
+Phase 2：LLM 訂單草稿
+
+- LLM Extraction queue。
+- LLM JSON schema。
+- OrderDraft / OrderDraftItem。
+- 缺欄位追問。
+- 模糊商品草稿。
+
+Phase 3：店家後台接單閉環
+
+- 草稿列表與詳情。
+- 草稿編輯。
+- 草稿確認成正式訂單。
+- 訂單列表與出貨狀態。
+- LINE 通知店家。
+
+Phase 4：商品資料
+
+- 手動商品管理。
+- Excel 匯入。
+- Google Sheet 匯入。
+- 商品候選搜尋與 LLM 比對。
+
+Phase 5：平台管理與營運
+
+- 平台管理後台。
+- LLM 用量統計。
+- 錯誤紀錄。
+- Audit log。
+
+
+22. 核心原則
+
+- 第一版目標是讓真人客服更快確認訂單，不是完全取代真人。
+- LLM 的輸出必須可追蹤、可審核、可修正。
+- 模糊商品要能被接住，但必須交由真人確認。
+- 所有資料都要正確隔離 tenant。
+- LINE Webhook 不能被 LLM 延遲拖慢。
+- 庫存、金流、物流只保留擴充空間，不進第一版核心流程。
+
+
+23. MVP 完成定義
+
+以下全部完成才算 MVP 可交付：
+
+- 可新增至少兩家店家，且資料互不干擾。
+- 每家店可設定自己的 LINE Channel。
+- 客戶透過 LINE 傳下單訊息後，後台可看到對話。
+- LLM 可產生訂單草稿。
+- 模糊商品可建立待人工確認草稿。
+- 店員可編輯草稿並確認成正式訂單。
+- 店家可更新訂單出貨狀態。
+- 新草稿或新訂單可推播通知店家。
+- 商品可手動建立並可匯入。
+- 主要錯誤情境不會讓系統崩潰。

@@ -1,0 +1,265 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const multer_1 = __importDefault(require("multer"));
+const client_1 = require("@prisma/client");
+const auth_1 = require("../../middleware/auth");
+const tenant_1 = require("../../middleware/tenant");
+const import_1 = require("./import");
+const prisma = new client_1.PrismaClient({});
+const router = (0, express_1.Router)();
+const upload = (0, multer_1.default)({ storage: multer_1.default.memoryStorage() });
+router.use(auth_1.authenticate, tenant_1.requireTenant);
+router.get('/', async (req, res) => {
+    try {
+        const tenantId = req.user.tenantId;
+        const { category, isActive, page = '1', limit = '20' } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        const take = parseInt(limit);
+        const where = { tenantId };
+        if (category) {
+            where.category = category;
+        }
+        if (isActive !== undefined) {
+            where.isActive = isActive === 'true';
+        }
+        const [products, total] = await Promise.all([
+            prisma.product.findMany({
+                where,
+                skip,
+                take,
+                orderBy: { createdAt: 'desc' },
+                include: {
+                    variants: {
+                        where: { isActive: true },
+                    },
+                },
+            }),
+            prisma.product.count({ where }),
+        ]);
+        res.json({
+            data: products,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                totalPages: Math.ceil(total / take),
+            },
+        });
+    }
+    catch (error) {
+        console.error('Error fetching products:', error);
+        res.status(500).json({ error: '取得商品失敗' });
+    }
+});
+router.get('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const tenantId = req.user.tenantId;
+        const product = await prisma.product.findFirst({
+            where: { id, tenantId },
+            include: {
+                variants: {
+                    where: { isActive: true },
+                },
+            },
+        });
+        if (!product) {
+            res.status(404).json({ error: '找不到商品' });
+            return;
+        }
+        res.json(product);
+    }
+    catch (error) {
+        console.error('Error fetching product:', error);
+        res.status(500).json({ error: '取得商品失敗' });
+    }
+});
+router.post('/', async (req, res) => {
+    try {
+        const tenantId = req.user.tenantId;
+        const { name, sku, category, description, basePrice } = req.body;
+        if (!name || name.trim() === '') {
+            res.status(400).json({ error: '商品名稱為必填欄位' });
+            return;
+        }
+        const product = await prisma.product.create({
+            data: {
+                tenantId,
+                name: name.trim(),
+                sku: sku?.trim() || null,
+                category: category?.trim() || null,
+                description: description?.trim() || null,
+                basePrice: basePrice !== undefined ? basePrice : null,
+                sourceType: 'manual',
+                isActive: true,
+            },
+            include: {
+                variants: true,
+            },
+        });
+        if (product.variants.length === 0) {
+            await prisma.productVariant.create({
+                data: {
+                    tenantId,
+                    productId: product.id,
+                    isActive: true,
+                },
+            });
+        }
+        await prisma.auditLog.create({
+            data: {
+                userId: req.user.userId,
+                tenantId,
+                action: 'CREATE_PRODUCT',
+                entityType: 'Product',
+                entityId: product.id,
+                metadata: JSON.stringify(req.body),
+            },
+        }).catch(console.error);
+        const created = await prisma.product.findUnique({
+            where: { id: product.id },
+            include: { variants: true },
+        });
+        res.status(201).json(created);
+    }
+    catch (error) {
+        console.error('Error creating product:', error);
+        res.status(500).json({ error: '建立商品失敗' });
+    }
+});
+router.patch('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const tenantId = req.user.tenantId;
+        const { name, sku, category, description, basePrice } = req.body;
+        const existing = await prisma.product.findFirst({
+            where: { id, tenantId },
+        });
+        if (!existing) {
+            res.status(404).json({ error: '找不到商品' });
+            return;
+        }
+        const updateData = { updatedAt: new Date() };
+        if (name !== undefined)
+            updateData.name = name.trim();
+        if (sku !== undefined)
+            updateData.sku = sku?.trim() || null;
+        if (category !== undefined)
+            updateData.category = category?.trim() || null;
+        if (description !== undefined)
+            updateData.description = description?.trim() || null;
+        if (basePrice !== undefined)
+            updateData.basePrice = basePrice;
+        const updated = await prisma.product.update({
+            where: { id },
+            data: updateData,
+            include: {
+                variants: {
+                    where: { isActive: true },
+                },
+            },
+        });
+        await prisma.auditLog.create({
+            data: {
+                userId: req.user.userId,
+                tenantId,
+                action: 'UPDATE_PRODUCT',
+                entityType: 'Product',
+                entityId: id,
+                metadata: JSON.stringify(req.body),
+            },
+        }).catch(console.error);
+        res.json(updated);
+    }
+    catch (error) {
+        console.error('Error updating product:', error);
+        res.status(500).json({ error: '更新商品失敗' });
+    }
+});
+router.delete('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const tenantId = req.user.tenantId;
+        const existing = await prisma.product.findFirst({
+            where: { id, tenantId },
+        });
+        if (!existing) {
+            res.status(404).json({ error: '找不到商品' });
+            return;
+        }
+        await prisma.product.update({
+            where: { id },
+            data: {
+                isActive: false,
+                updatedAt: new Date(),
+            },
+        });
+        await prisma.productVariant.updateMany({
+            where: { productId: id, tenantId },
+            data: {
+                isActive: false,
+                updatedAt: new Date(),
+            },
+        });
+        await prisma.auditLog.create({
+            data: {
+                userId: req.user.userId,
+                tenantId,
+                action: 'DELETE_PRODUCT',
+                entityType: 'Product',
+                entityId: id,
+            },
+        }).catch(console.error);
+        res.status(204).send();
+    }
+    catch (error) {
+        console.error('Error deleting product:', error);
+        res.status(500).json({ error: '刪除商品失敗' });
+    }
+});
+router.post('/import', upload.single('file'), async (req, res) => {
+    try {
+        const tenantId = req.user.tenantId;
+        if (!req.file) {
+            res.status(400).json({ error: '請上傳檔案' });
+            return;
+        }
+        const file = req.file;
+        const ext = file.originalname.split('.').pop()?.toLowerCase();
+        if (!['xlsx', 'xls', 'csv'].includes(ext || '')) {
+            res.status(400).json({ error: '只支援 .xlsx, .xls, .csv 格式' });
+            return;
+        }
+        const rows = await (0, import_1.parseExcelFile)(file.buffer);
+        if (rows.length === 0) {
+            res.status(400).json({ error: '檔案中沒有資料' });
+            return;
+        }
+        const result = await (0, import_1.importProducts)(tenantId, rows);
+        await prisma.auditLog.create({
+            data: {
+                userId: req.user.userId,
+                tenantId,
+                action: 'IMPORT_PRODUCTS',
+                entityType: 'Product',
+                metadata: JSON.stringify({ success: result.success, failed: result.failed }),
+            },
+        }).catch(console.error);
+        res.json({
+            message: `匯入完成`,
+            success: result.success,
+            failed: result.failed,
+            errors: result.errors,
+        });
+    }
+    catch (error) {
+        console.error('Error importing products:', error);
+        res.status(500).json({ error: '匯入商品失敗' });
+    }
+});
+exports.default = router;
+//# sourceMappingURL=routes.js.map
