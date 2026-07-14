@@ -17,9 +17,13 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: LINE_CHANNEL_ID
+        value: ""
       - key: LINE_CHANNEL_SECRET
+        value: ""
       - key: LINE_ACCESS_TOKEN
+        value: ""
       - key: LLM_API_KEY
+        value: ""
       - key: LLM_MODEL
         value: gpt-4o-mini
       - key: PORT
