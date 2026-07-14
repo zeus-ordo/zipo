@@ -31,6 +31,5 @@ services:
 
 databases:
   - name: zipo-db
-    plan: starter
     databaseName: zipo
     ipAllowList: []
