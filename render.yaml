@@ -5,7 +5,7 @@ services:
     region: singapore
     plan: free
     installCommand: npm install --include=dev
-    buildCommand: npm install --include=dev && npm run build:all
+    buildCommand: npm install && npm install @types/node @types/express && npm run build:all
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
