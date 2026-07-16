@@ -12,8 +12,7 @@
     "resolveJsonModule": true,
     "declaration": false,
     "sourceMap": false,
-    "noImplicitAny": false,
-    "types": ["node"]
+    "noImplicitAny": false
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "frontend"]
