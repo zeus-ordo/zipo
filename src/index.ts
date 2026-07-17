@@ -54,7 +54,7 @@ app.use('/api/dashboard', dashboardRouter);
 app.use('/api/store-settings', storeSettingRouter);
 
 if (isProduction) {
-  app.get('/(.*)', (_req, res) => {
+  app.get('{*path}', (_req, res) => {
     res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'));
   });
 }
