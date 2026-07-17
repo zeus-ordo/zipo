@@ -46,7 +46,7 @@ export function RegisterPage() {
         email,
         password,
         name,
-        role,
+        role: role === 'admin' ? 'store_admin' : role,
         tenantId: finalTenantId,
       });
 
