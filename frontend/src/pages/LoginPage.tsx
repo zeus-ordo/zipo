@@ -69,6 +69,10 @@ export function LoginPage() {
             {loading ? '登入中...' : '登入'}
           </button>
         </form>
+
+        <p className="text-center text-sm text-gray-500 mt-4">
+          還沒有帳號？<a href="/register" className="text-blue-600 hover:underline">註冊</a>
+        </p>
       </div>
     </div>
   );
