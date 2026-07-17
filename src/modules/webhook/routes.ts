@@ -100,6 +100,10 @@ async function handleTextEvent(event: LineWebhookEvent, tenantId: string, channe
   });
 }
 
+router.get('/:channelId', async (req: Request, res: Response) => {
+  res.status(200).send('OK');
+});
+
 router.post('/:channelId', async (req: Request, res: Response) => {
   res.status(200).json({ status: 'ok' });
 
