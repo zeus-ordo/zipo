@@ -131,45 +131,42 @@ router.post('/:channelId', async (req: Request, res: Response) => {
     const webhookRequest: LineWebhookRequest = req.body;
     const events = webhookRequest.events || [];
 
+    const textEvents: { event: LineWebhookEvent; eventId: string }[] = [];
+
     for (const event of events) {
       const eventId = event.webhookEventId || `${event.source?.userId}-${event.timestamp}`;
 
-      await prisma.$transaction(async (tx) => {
-        const existing = await tx.processedWebhookEvent.findUnique({
-          where: { id: eventId },
-        });
-
-        if (existing) {
-          console.log(`[LINE Webhook] Duplicate event ${eventId}, skipping`);
-          return;
-        }
-
-        await tx.processedWebhookEvent.create({
-          data: {
-            id: eventId,
-            tenantId: lineChannel.tenantId,
-            channelId: lineChannel.channelId,
-          },
-        });
-      }).catch(() => {
-        console.log(`[LINE Webhook] Duplicate event ${eventId}, skipping`);
-        return;
-      });
-
-      const processed = await prisma.processedWebhookEvent.findUnique({
+      const existing = await prisma.processedWebhookEvent.findUnique({
         where: { id: eventId },
       });
 
-      if (!processed) {
+      if (existing) {
+        console.log(`[LINE Webhook] Duplicate event ${eventId}, skipping`);
         continue;
       }
 
+      await prisma.processedWebhookEvent.create({
+        data: {
+          id: eventId,
+          tenantId: lineChannel.tenantId,
+          channelId: lineChannel.channelId,
+        },
+      });
+
       if (event.type === 'text' && event.source?.userId) {
-        await handleTextEvent(event, lineChannel.tenantId, lineChannel.channelId, lineChannel.channelAccessToken);
+        textEvents.push({ event, eventId });
       }
     }
 
     res.status(200).json({ status: 'ok' });
+
+    setImmediate(() => {
+      for (const { event } of textEvents) {
+        handleTextEvent(event, lineChannel.tenantId, lineChannel.channelId, lineChannel.channelAccessToken).catch((err) => {
+          console.error('[LINE Webhook] Error handling text event:', err);
+        });
+      }
+    });
   } catch (error) {
     console.error('LINE Webhook error:', error);
     res.status(500).json({ error: 'Internal server error' });
