@@ -101,13 +101,15 @@ async function handleTextEvent(event: LineWebhookEvent, tenantId: string, channe
 }
 
 router.post('/:channelId', async (req: Request, res: Response) => {
+  res.status(200).json({ status: 'ok' });
+
   const channelIdParam = req.params.channelId;
   const channelId = Array.isArray(channelIdParam) ? channelIdParam[0] : channelIdParam;
   const signature = req.headers['x-line-signature'];
   const signatureStr = Array.isArray(signature) ? signature[0] : signature as string | undefined;
 
   if (!signatureStr) {
-    res.status(401).json({ error: 'Missing LINE signature' });
+    console.log('[LINE Webhook] Missing signature');
     return;
   }
 
@@ -117,13 +119,13 @@ router.post('/:channelId', async (req: Request, res: Response) => {
   });
 
   if (!lineChannel) {
-    res.status(404).json({ error: 'LineChannel not found' });
+    console.log('[LINE Webhook] Channel not found:', channelId);
     return;
   }
 
   const rawBody = JSON.stringify(req.body);
   if (!verifyLineSignature(lineChannel.channelSecret, rawBody, signatureStr)) {
-    res.status(401).json({ error: 'Invalid LINE signature' });
+    console.log('[LINE Webhook] Invalid signature');
     return;
   }
 
@@ -153,15 +155,11 @@ router.post('/:channelId', async (req: Request, res: Response) => {
     }
   }
 
-  res.status(200).json({ status: 'ok' });
-
-  setTimeout(() => {
-    for (const event of textEvents) {
-      handleTextEvent(event, lineChannel.tenantId, lineChannel.channelId, lineChannel.channelAccessToken).catch((err) => {
-        console.error('[LINE Webhook] Error handling text event:', err);
-      });
-    }
-  }, 0);
+  for (const event of textEvents) {
+    handleTextEvent(event, lineChannel.tenantId, lineChannel.channelId, lineChannel.channelAccessToken).catch((err) => {
+      console.error('[LINE Webhook] Error handling text event:', err);
+    });
+  }
 });
 
 export const webhookRoutes = router;
