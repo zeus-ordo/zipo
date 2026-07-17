@@ -19,8 +19,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === 'production';
 
-const rootDir = path.resolve(__dirname, '..', '..');
-const frontendDistPath = path.join(rootDir, 'frontend', 'dist');
+const frontendDistPath = path.resolve(__dirname, '..', 'frontend', 'dist');
 
 app.use(helmet({
   contentSecurityPolicy: false,
