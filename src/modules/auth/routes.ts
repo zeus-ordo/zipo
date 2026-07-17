@@ -62,7 +62,7 @@ router.post('/login', async (req, res) => {
 
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, name, role, tenantId }: RegisterInput = req.body;
+    const { email, password, name, role, tenantId, tenantName }: RegisterInput & { tenantName?: string } = req.body;
 
     if (!email || !password || !name || !role) {
       res.status(400).json({ error: '所有欄位必填' });
@@ -79,9 +79,26 @@ router.post('/register', async (req, res) => {
       return;
     }
 
-    if ((role === 'store_admin' || role === 'staff') && !tenantId) {
-      res.status(400).json({ error: '店家員工需要提供 tenantId' });
+    let finalTenantId = tenantId;
+
+    if ((role === 'store_admin' || role === 'staff') && !tenantId && !tenantName) {
+      res.status(400).json({ error: '店家員工需要提供 tenantId 或 tenantName' });
       return;
+    }
+
+    if ((role === 'store_admin' || role === 'staff') && tenantName && !tenantId) {
+      const tenant = await prisma.tenant.create({
+        data: {
+          name: tenantName,
+          storeSettings: {
+            create: {
+              paymentMethods: '[]',
+              deliveryMethods: '[]',
+            },
+          },
+        },
+      });
+      finalTenantId = tenant.id;
     }
 
     const existing = await prisma.user.findUnique({ where: { email } });
@@ -98,7 +115,7 @@ router.post('/register', async (req, res) => {
         passwordHash,
         name,
         role,
-        tenantId: role === 'platform_admin' ? null : tenantId,
+        tenantId: role === 'platform_admin' ? null : finalTenantId,
       },
     });
 

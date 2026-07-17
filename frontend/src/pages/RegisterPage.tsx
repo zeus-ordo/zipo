@@ -38,8 +38,6 @@ export function RegisterPage() {
           setLoading(false);
           return;
         }
-        const tenantRes = await tenantApi.create(tenantName);
-        finalTenantId = tenantRes.data.id;
       }
 
       const res = await authApi.register({
@@ -47,7 +45,8 @@ export function RegisterPage() {
         password,
         name,
         role: role === 'admin' ? 'store_admin' : role,
-        tenantId: finalTenantId,
+        tenantId: finalTenantId || undefined,
+        tenantName: isNewTenant ? tenantName : undefined,
       });
 
       localStorage.setItem('token', res.data.tokens.accessToken);
