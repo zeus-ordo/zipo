@@ -11,7 +11,7 @@
     "build": "tsc",
     "build:frontend": "cd frontend && npm install && npm run build",
     "build:all": "npm run build && npm run build:frontend",
-    "start": "npx prisma migrate deploy && npx tsx src/index.ts",
+    "start": "npx tsx src/index.ts",
     "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
