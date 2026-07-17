@@ -4,9 +4,8 @@ services:
     runtime: node
     region: singapore
     plan: free
-    installCommand: npm install --include=dev
-    buildCommand: rm -rf node_modules && npm install --include=dev && npm run build:all
-    startCommand: npm start
+    buildCommand: npm install && cd frontend && npm install && npm run build
+    startCommand: npx tsx src/index.ts
     healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL

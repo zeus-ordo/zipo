@@ -7,8 +7,8 @@
     "doc": "docs"
   },
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-    "build": "tsc --transpileOnly",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
     "build:frontend": "cd frontend && npm install && npm run build",
     "build:all": "npm run build && npm run build:frontend",
     "start": "node dist/index.js",
@@ -42,6 +42,7 @@
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.2.0",
     "prisma": "^5.22.0",
+    "tsx": "^4.7.0",
     "typescript": "^5.3.3",
     "xlsx": "^0.18.5"
   },
