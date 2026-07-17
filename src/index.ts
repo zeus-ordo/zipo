@@ -2,7 +2,6 @@ import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { authRoutes } from './modules/auth';
 import { tenantRoutes } from './modules/tenant';
 import { lineRoutes } from './modules/line';
@@ -16,14 +15,12 @@ import { storeSettingRouter } from './modules/store-setting';
 import { apiLimiter, authLimiter, webhookLimiter } from './middleware/rateLimit';
 import { globalErrorHandler, notFoundHandler } from './middleware/errorHandler';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === 'production';
 
-const frontendDistPath = path.join(__dirname, '..', '..', 'frontend', 'dist');
+const rootDir = path.resolve(__dirname, '..', '..');
+const frontendDistPath = path.join(rootDir, 'frontend', 'dist');
 
 app.use(helmet({
   contentSecurityPolicy: false,
