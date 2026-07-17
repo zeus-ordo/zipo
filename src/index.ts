@@ -12,6 +12,7 @@ import llmRoutes from './modules/llm/routes';
 import { notificationRoutes } from './modules/notification';
 import { adminRoutes, dashboardRouter } from './modules/admin';
 import { storeSettingRouter } from './modules/store-setting';
+import { webhookRoutes } from './modules/webhook/routes';
 import { apiLimiter, authLimiter, webhookLimiter } from './middleware/rateLimit';
 import { globalErrorHandler, notFoundHandler } from './middleware/errorHandler';
 
@@ -39,7 +40,7 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.use('/api/webhooks/line', webhookLimiter);
+app.use('/api/webhooks/line', webhookLimiter, webhookRoutes);
 app.use('/api/auth', authLimiter);
 app.use('/api', apiLimiter);
 
