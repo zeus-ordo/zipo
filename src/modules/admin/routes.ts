@@ -119,4 +119,37 @@ router.get('/audit-logs', async (req, res) => {
   }
 });
 
+router.get('/debug/users', async (req, res) => {
+  try {
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        tenantId: true,
+        tenant: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    const lineChannels = await prisma.lineChannel.findMany({
+      select: {
+        id: true,
+        channelId: true,
+        tenantId: true,
+      },
+    });
+
+    res.json({ users, lineChannels });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: 'Debug error' });
+  }
+});
+
 export default router;
