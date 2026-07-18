@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout } from '../components/Layout';
 import { orderDraftApi, orderApi, productApi } from '../api/client';
 import { formatDate } from '../utils/date';
-import { AlertTriangle, Check, Trash2, Save } from 'lucide-react';
+import { AlertTriangle, Check, Trash2, Save, User } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export function OrderDraftDetailPage() {
@@ -259,6 +259,53 @@ export function OrderDraftDetailPage() {
         {/* Right: Form */}
         <div className="bg-white rounded-xl shadow-sm p-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">收件與付款資訊</h2>
+
+          {draft.customer?.pendingInfoUpdate && (
+            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-start gap-2">
+                <User className="text-yellow-600 mt-0.5" size={18} />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-yellow-800">客戶資料已更新</p>
+                  <div className="mt-2 text-xs text-yellow-700 space-y-1">
+                    {(() => {
+                      try {
+                        const pending = JSON.parse(draft.customer.pendingInfoUpdate);
+                        return (
+                          <>
+                            {pending.name && <p>姓名: {pending.name}</p>}
+                            {pending.phone && <p>電話: {pending.phone}</p>}
+                            {pending.address && <p>地址: {pending.address}</p>}
+                          </>
+                        );
+                      } catch {
+                        return null;
+                      }
+                    })()}
+                  </div>
+                  <button
+                    onClick={() => {
+                      try {
+                        const pending = JSON.parse(draft.customer.pendingInfoUpdate);
+                        setFormData(prev => ({
+                          ...prev,
+                          recipientName: pending.name || prev.recipientName,
+                          recipientPhone: pending.phone || prev.recipientPhone,
+                          recipientAddress: pending.address || prev.recipientAddress,
+                        }));
+                        toast.success('已套用新客戶資料');
+                      } catch {
+                        toast.error('解析客戶資料失敗');
+                      }
+                    }}
+                    className="mt-2 px-3 py-1 bg-yellow-200 text-yellow-800 text-xs rounded hover:bg-yellow-300"
+                  >
+                    套用新資料
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">收件人姓名 *</label>
