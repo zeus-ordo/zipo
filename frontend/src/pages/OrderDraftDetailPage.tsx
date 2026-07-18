@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout } from '../components/Layout';
@@ -27,6 +27,17 @@ export function OrderDraftDetailPage() {
   });
 
   const draft = data?.data;
+
+  useEffect(() => {
+    if (draft?.customer) {
+      setFormData(prev => ({
+        ...prev,
+        recipientName: draft.customer?.name || prev.recipientName,
+        recipientPhone: draft.customer?.phone || prev.recipientPhone,
+        recipientAddress: draft.customer?.address || prev.recipientAddress,
+      }));
+    }
+  }, [draft]);
 
   const confirmMutation = useMutation({
     mutationFn: (data: { recipientName: string; recipientPhone: string; recipientAddress: string; deliveryMethod: string; paymentMethod: string }) =>
