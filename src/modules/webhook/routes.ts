@@ -101,7 +101,8 @@ async function handleTextEvent(event: LineWebhookEvent, tenantId: string, channe
 }
 
 router.get('/:channelId', async (req: Request, res: Response) => {
-  res.status(200).send('OK');
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('OK');
 });
 
 router.post('/:channelId', async (req: Request, res: Response) => {
