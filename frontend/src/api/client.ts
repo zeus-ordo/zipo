@@ -78,6 +78,8 @@ export const orderDraftApi = {
   get: (id: string) => api.get<OrderDraft>(`/order-drafts/${id}`),
   update: (id: string, data: Partial<OrderDraft>) =>
     api.patch<OrderDraft>(`/order-drafts/${id}`, data),
+  updateItem: (draftId: string, itemId: string, data: { matchedProductId?: string; unitPrice?: number }) =>
+    api.patch(`/order-drafts/${draftId}/items/${itemId}`, data),
   confirm: (id: string, data: { recipientName: string; recipientPhone: string; recipientAddress: string; deliveryMethod: string; paymentMethod: string }) =>
     api.post<Order>(`/order-drafts/${id}/confirm`, data),
   delete: (id: string) => api.delete(`/order-drafts/${id}`),

@@ -168,6 +168,46 @@ orderDraftRouter.patch('/:id', async (req, res) => {
   }
 });
 
+orderDraftRouter.patch('/:draftId/items/:itemId', async (req, res) => {
+  try {
+    const { draftId, itemId } = req.params;
+    const tenantId = req.user!.tenantId!;
+    const { matchedProductId, unitPrice } = req.body;
+
+    const draft = await prisma.orderDraft.findFirst({
+      where: { id: draftId, tenantId },
+    });
+
+    if (!draft) {
+      res.status(404).json({ error: '找不到訂單草稿' });
+      return;
+    }
+
+    const item = await prisma.orderDraftItem.findFirst({
+      where: { id: itemId, orderDraftId: draftId },
+    });
+
+    if (!item) {
+      res.status(404).json({ error: '找不到商品項目' });
+      return;
+    }
+
+    const updateData: Record<string, unknown> = { updatedAt: new Date() };
+    if (matchedProductId !== undefined) updateData.matchedProductId = matchedProductId || null;
+    if (unitPrice !== undefined) updateData.unitPrice = unitPrice;
+
+    const updated = await prisma.orderDraftItem.update({
+      where: { id: itemId },
+      data: updateData,
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error('Error updating order draft item:', error);
+    res.status(500).json({ error: '更新商品項目失敗' });
+  }
+});
+
 orderDraftRouter.post('/:id/confirm', async (req, res) => {
   try {
     const { id } = req.params;

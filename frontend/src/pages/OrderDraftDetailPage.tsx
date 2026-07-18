@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout } from '../components/Layout';
-import { orderDraftApi, orderApi } from '../api/client';
+import { orderDraftApi, orderApi, productApi } from '../api/client';
 import { formatDate } from '../utils/date';
-import { AlertTriangle, Check, Trash2 } from 'lucide-react';
+import { AlertTriangle, Check, Trash2, Save } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export function OrderDraftDetailPage() {
@@ -19,6 +19,8 @@ export function OrderDraftDetailPage() {
     deliveryMethod: '',
     paymentMethod: '',
   });
+  const [itemPrices, setItemPrices] = useState<Record<string, number>>({});
+  const [itemProducts, setItemProducts] = useState<Record<string, string>>({});
 
   const { data, isLoading } = useQuery({
     queryKey: ['order-draft', id],
@@ -26,12 +28,16 @@ export function OrderDraftDetailPage() {
     enabled: !!id,
   });
 
+  const { data: productsData } = useQuery({
+    queryKey: ['products', { limit: 100 }],
+    queryFn: () => productApi.list({ limit: 100 }),
+  });
+
   const draft = data?.data;
+  const products = productsData?.data?.data || [];
 
   useEffect(() => {
-    console.log('[OrderDraftDetail] draft:', JSON.stringify(draft, null, 2));
     if (draft?.customer) {
-      console.log('[OrderDraftDetail] customer:', JSON.stringify(draft.customer, null, 2));
       setFormData(prev => ({
         ...prev,
         recipientName: draft.customer?.name || prev.recipientName,
@@ -39,7 +45,49 @@ export function OrderDraftDetailPage() {
         recipientAddress: draft.customer?.address || prev.recipientAddress,
       }));
     }
+    if (draft?.items) {
+      const prices: Record<string, number> = {};
+      const productIds: Record<string, string> = {};
+      draft.items.forEach((item: any) => {
+        if (item.unitPrice) prices[item.id] = item.unitPrice;
+        if (item.matchedProductId) productIds[item.id] = item.matchedProductId;
+      });
+      setItemPrices(prices);
+      setItemProducts(productIds);
+    }
   }, [draft]);
+
+  const updateItemMutation = useMutation({
+    mutationFn: ({ itemId, productId, unitPrice }: { itemId: string; productId?: string; unitPrice?: number }) =>
+      orderDraftApi.updateItem(id!, itemId, { matchedProductId: productId, unitPrice }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['order-draft', id] });
+      toast.success('已更新商品');
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.error || '更新失敗');
+    },
+  });
+
+  const handlePriceChange = (itemId: string, price: number) => {
+    setItemPrices(prev => ({ ...prev, [itemId]: price }));
+  };
+
+  const handleProductChange = (itemId: string, productId: string) => {
+    setItemProducts(prev => ({ ...prev, [itemId]: productId }));
+    const product = products.find((p: any) => p.id === productId);
+    if (product && product.basePrice) {
+      setItemPrices(prev => ({ ...prev, [itemId]: product.basePrice }));
+    }
+  };
+
+  const handleSaveItem = (itemId: string) => {
+    updateItemMutation.mutate({
+      itemId,
+      productId: itemProducts[itemId] || undefined,
+      unitPrice: itemPrices[itemId] || undefined,
+    });
+  };
 
   const confirmMutation = useMutation({
     mutationFn: (data: { recipientName: string; recipientPhone: string; recipientAddress: string; deliveryMethod: string; paymentMethod: string }) =>
@@ -67,13 +115,29 @@ export function OrderDraftDetailPage() {
       toast.error('請填寫收件人姓名、電話、地址');
       return;
     }
-    confirmMutation.mutate({
-      recipientName: formData.recipientName,
-      recipientPhone: formData.recipientPhone,
-      recipientAddress: formData.recipientAddress,
-      deliveryMethod: formData.deliveryMethod,
-      paymentMethod: formData.paymentMethod,
-    });
+    setConfirming(true);
+    try {
+      await Promise.all(
+        draft.items.map((item: any) => {
+          if (itemPrices[item.id] || itemProducts[item.id]) {
+            return orderDraftApi.updateItem(id!, item.id, {
+              matchedProductId: itemProducts[item.id] || undefined,
+              unitPrice: itemPrices[item.id] || undefined,
+            });
+          }
+          return Promise.resolve();
+        })
+      );
+      confirmMutation.mutate({
+        recipientName: formData.recipientName,
+        recipientPhone: formData.recipientPhone,
+        recipientAddress: formData.recipientAddress,
+        deliveryMethod: formData.deliveryMethod,
+        paymentMethod: formData.paymentMethod,
+      });
+    } finally {
+      setConfirming(false);
+    }
   };
 
   if (isLoading) {
@@ -97,7 +161,7 @@ export function OrderDraftDetailPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800">訂單草稿</h1>
         <p className="text-sm text-gray-500 mt-1">
-          {draft.customer?.lineDisplayName} · {formatDate(draft.createdAt)}
+          {draft.customer?.lineDisplayName || draft.customer?.name || '未知'} · {formatDate(draft.createdAt)}
         </p>
       </div>
 
@@ -108,8 +172,8 @@ export function OrderDraftDetailPage() {
           {draft.items?.length === 0 ? (
             <p className="text-gray-500">無商品項目</p>
           ) : (
-            <div className="space-y-3">
-              {draft.items?.map((item) => (
+            <div className="space-y-4">
+              {draft.items?.map((item: any) => (
                 <div key={item.id} className="border rounded-lg p-4">
                   {item.isFuzzy && (
                     <div className="flex items-center gap-1 text-yellow-600 text-sm mb-2">
@@ -117,20 +181,61 @@ export function OrderDraftDetailPage() {
                       模糊商品
                     </div>
                   )}
-                  <div className="grid grid-cols-3 gap-2 text-sm">
+                  <div className="grid grid-cols-1 gap-2 text-sm">
                     <div>
                       <span className="text-gray-500">商品名稱</span>
                       <p className="font-medium">{item.name || item.rawText}</p>
                     </div>
-                    <div>
-                      <span className="text-gray-500">顏色/尺寸</span>
-                      <p className="font-medium">{item.color || '-'} / {item.size || '-'}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">數量</span>
-                      <p className="font-medium">{item.quantity || '-'}</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-gray-500">顏色/尺寸</span>
+                        <p className="font-medium">{item.color || '-'} / {item.size || '-'}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">數量</span>
+                        <p className="font-medium">{item.quantity || '-'}</p>
+                      </div>
                     </div>
                   </div>
+
+                  <div className="mt-3 pt-3 border-t">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-1">選擇商品</label>
+                        <select
+                          value={itemProducts[item.id] || ''}
+                          onChange={(e) => handleProductChange(item.id, e.target.value)}
+                          className="w-full px-2 py-1 border rounded text-sm"
+                        >
+                          <option value="">選擇商品...</option>
+                          {products.map((product: any) => (
+                            <option key={product.id} value={product.id}>
+                              {product.name} (${product.basePrice || '-'})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-1">單價</label>
+                        <div className="flex gap-1">
+                          <input
+                            type="number"
+                            value={itemPrices[item.id] || ''}
+                            onChange={(e) => handlePriceChange(item.id, parseInt(e.target.value) || 0)}
+                            className="w-full px-2 py-1 border rounded text-sm"
+                            placeholder="0"
+                          />
+                          <button
+                            onClick={() => handleSaveItem(item.id)}
+                            className="px-2 py-1 bg-blue-100 text-blue-600 rounded text-sm hover:bg-blue-200"
+                          >
+                            <Save size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {item.fuzzyReason && (
                     <p className="text-xs text-gray-500 mt-2">原因: {item.fuzzyReason}</p>
                   )}
@@ -213,11 +318,11 @@ export function OrderDraftDetailPage() {
           <div className="mt-6 space-y-3">
             <button
               onClick={handleConfirm}
-              disabled={confirmMutation.isPending}
+              disabled={confirmMutation.isPending || confirming}
               className="w-full py-3 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               <Check size={20} />
-              {confirmMutation.isPending ? '確認中...' : '確認並建立訂單'}
+              {confirming ? '更新中...' : '確認並建立訂單'}
             </button>
             <button
               onClick={() => {
