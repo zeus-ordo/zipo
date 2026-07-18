@@ -55,7 +55,7 @@ app.get('/api/debug/users', async (_req, res) => {
   }
 });
 
-app.use('/api/webhooks/line', webhookLimiter, webhookRoutes);
+app.use('/api/webhooks/line', webhookRoutes);
 app.use('/api/auth', authLimiter);
 app.use('/api', apiLimiter);
 
