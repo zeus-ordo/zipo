@@ -161,8 +161,8 @@ router.post('/:channelId', async (req: Request, res: Response) => {
       continue;
     }
 
-    console.log('[LINE Webhook] Event type:', event.type, 'userId:', event.source?.userId);
-    if (event.type === 'text' && event.source?.userId) {
+    console.log('[LINE Webhook] Event type:', event.type, 'message type:', event.message?.type, 'userId:', event.source?.userId);
+    if (event.message?.type === 'text' && event.source?.userId) {
       textEvents.push(event);
     }
   }
