@@ -49,6 +49,7 @@ async function processTask(task: LlmTask): Promise<void> {
   );
 
   console.log(`[LLM Queue] Extraction result: intent=${result.intent}, confidence=${result.confidence}, action=${result.draft_action}, items=${result.items.length}, missing=${result.missing_fields.join(',') || 'none'}`);
+  console.log(`[LLM Queue] Customer info: name=${result.customer_info?.name}, phone=${result.customer_info?.phone}, address=${result.customer_info?.address}`);
 
   if (result.draft_action === 'create_or_update' || result.draft_action === 'ask_followup') {
     await prisma.orderDraft.deleteMany({
