@@ -62,6 +62,7 @@ async function processTask(task: LlmTask): Promise<void> {
     (result.intent === 'order' && customerInfoComplete && result.items.length > 0);
 
   if (result.customer_info && (result.customer_info.name || result.customer_info.phone || result.customer_info.address)) {
+    console.log('[LLM Queue] Updating customer info:', JSON.stringify(result.customer_info));
     await prisma.customer.update({
       where: { id: task.customerId },
       data: {
@@ -69,7 +70,13 @@ async function processTask(task: LlmTask): Promise<void> {
         phone: result.customer_info.phone || null,
         address: result.customer_info.address || null,
       },
-    }).catch((err) => console.error('[LLM Queue] Failed to update customer info:', err));
+    }).then(() => {
+      console.log('[LLM Queue] Customer updated successfully');
+    }).catch((err) => {
+      console.error('[LLM Queue] Failed to update customer info:', err);
+    });
+  } else {
+    console.log('[LLM Queue] No customer info to update, customer_info:', JSON.stringify(result.customer_info));
   }
 
   if (shouldCreateDraft) {
