@@ -94,6 +94,8 @@ export const orderApi = {
     api.patch<Order>(`/orders/${id}`, data),
   updateStatus: (id: string, status: string) =>
     api.patch<Order>(`/orders/${id}/status`, { status }),
+  updateItem: (orderId: string, itemId: string, data: { unitPrice?: number; quantity?: number }) =>
+    api.patch(`/orders/${orderId}/items/${itemId}`, data),
 };
 
 // Products

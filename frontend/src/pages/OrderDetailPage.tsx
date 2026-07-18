@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout } from '../components/Layout';
 import { orderApi } from '../api/client';
 import { formatDate } from '../utils/date';
-import { CheckCircle, Truck, Package, XCircle } from 'lucide-react';
+import { CheckCircle, Truck, Package, XCircle, Save } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const statusConfig = {
@@ -18,6 +18,8 @@ export function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   const [updating, setUpdating] = useState(false);
+  const [itemPrices, setItemPrices] = useState<Record<string, number>>({});
+  const [itemQuantities, setItemQuantities] = useState<Record<string, number>>({});
 
   const { data, isLoading } = useQuery({
     queryKey: ['order', id],
@@ -26,6 +28,34 @@ export function OrderDetailPage() {
   });
 
   const order = data?.data;
+
+  const updateItemMutation = useMutation({
+    mutationFn: ({ itemId, unitPrice, quantity }: { itemId: string; unitPrice?: number; quantity?: number }) =>
+      orderApi.updateItem(id!, itemId, { unitPrice, quantity }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['order', id] });
+      toast.success('已更新商品');
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.error || '更新失敗');
+    },
+  });
+
+  const handlePriceChange = (itemId: string, price: number) => {
+    setItemPrices(prev => ({ ...prev, [itemId]: price }));
+  };
+
+  const handleQuantityChange = (itemId: string, quantity: number) => {
+    setItemQuantities(prev => ({ ...prev, [itemId]: quantity }));
+  };
+
+  const handleSaveItem = (itemId: string) => {
+    updateItemMutation.mutate({
+      itemId,
+      unitPrice: itemPrices[itemId],
+      quantity: itemQuantities[itemId],
+    });
+  };
 
   const statusMutation = useMutation({
     mutationFn: (status: string) => orderApi.updateStatus(id!, status),
@@ -95,7 +125,15 @@ export function OrderDetailPage() {
 
   const config = statusConfig[order.status as keyof typeof statusConfig];
   const StatusIcon = config?.icon || CheckCircle;
-  const total = order.items?.reduce((sum, item) => sum + (item.lineTotal || 0), 0);
+
+  const calculateTotal = () => {
+    if (!order.items) return 0;
+    return order.items.reduce((sum: number, item: any) => {
+      const price = itemPrices[item.id] ?? item.unitPrice ?? 0;
+      const qty = itemQuantities[item.id] ?? item.quantity ?? 1;
+      return sum + (price * qty);
+    }, 0);
+  };
 
   return (
     <Layout>
@@ -110,10 +148,10 @@ export function OrderDetailPage() {
         {/* Left: Items */}
         <div className="bg-white rounded-xl shadow-sm p-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">商品項目</h2>
-          <div className="space-y-3">
-            {order.items?.map((item) => (
+          <div className="space-y-4">
+            {order.items?.map((item: any) => (
               <div key={item.id} className="border rounded-lg p-4">
-                <div className="grid grid-cols-4 gap-2 text-sm">
+                <div className="grid grid-cols-4 gap-2 text-sm mb-3">
                   <div>
                     <span className="text-gray-500">商品名稱</span>
                     <p className="font-medium">{item.name || item.rawText}</p>
@@ -124,19 +162,49 @@ export function OrderDetailPage() {
                   </div>
                   <div>
                     <span className="text-gray-500">單價</span>
-                    <p className="font-medium">${item.unitPrice || 0}</p>
+                    <p className="font-medium">${itemPrices[item.id] ?? item.unitPrice ?? 0}</p>
                   </div>
                   <div>
                     <span className="text-gray-500">小計</span>
-                    <p className="font-medium">${item.lineTotal || 0}</p>
+                    <p className="font-medium">
+                      ${((itemPrices[item.id] ?? item.unitPrice ?? 0) * (itemQuantities[item.id] ?? item.quantity ?? 1))}
+                    </p>
                   </div>
+                </div>
+
+                <div className="flex gap-2 items-center pt-2 border-t">
+                  <div className="flex items-center gap-1">
+                    <label className="text-xs text-gray-500">單價</label>
+                    <input
+                      type="number"
+                      value={itemPrices[item.id] ?? item.unitPrice ?? ''}
+                      onChange={(e) => handlePriceChange(item.id, parseInt(e.target.value) || 0)}
+                      className="w-20 px-2 py-1 border rounded text-sm"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <label className="text-xs text-gray-500">數量</label>
+                    <input
+                      type="number"
+                      value={itemQuantities[item.id] ?? item.quantity ?? 1}
+                      onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 1)}
+                      className="w-16 px-2 py-1 border rounded text-sm"
+                    />
+                  </div>
+                  <button
+                    onClick={() => handleSaveItem(item.id)}
+                    disabled={updateItemMutation.isPending}
+                    className="px-2 py-1 bg-blue-100 text-blue-600 rounded text-sm hover:bg-blue-200 disabled:opacity-50"
+                  >
+                    <Save size={14} />
+                  </button>
                 </div>
               </div>
             ))}
           </div>
           <div className="mt-4 pt-4 border-t flex justify-between items-center">
             <span className="text-lg font-semibold text-gray-800">總金額</span>
-            <span className="text-2xl font-bold text-blue-600">${total?.toLocaleString() || 0}</span>
+            <span className="text-2xl font-bold text-blue-600">${calculateTotal().toLocaleString()}</span>
           </div>
         </div>
 

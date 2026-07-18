@@ -33,7 +33,7 @@ async function processTask(task: LlmTask): Promise<void> {
   const messages = await prisma.message.findMany({
     where: { conversationId: task.conversationId },
     orderBy: { createdAt: 'desc' },
-    take: 20,
+    take: 5,
   });
   const reversedMessages = messages.reverse();
 

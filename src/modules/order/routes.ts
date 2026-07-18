@@ -535,5 +535,64 @@ orderRouter.patch('/:id', async (req, res) => {
   }
 });
 
+orderRouter.patch('/:orderId/items/:itemId', async (req, res) => {
+  try {
+    const { orderId, itemId } = req.params;
+    const tenantId = req.user!.tenantId!;
+    const { unitPrice, quantity } = req.body;
+
+    const order = await prisma.order.findFirst({
+      where: { id: orderId, tenantId },
+    });
+
+    if (!order) {
+      res.status(404).json({ error: '找不到訂單' });
+      return;
+    }
+
+    const item = await prisma.orderItem.findFirst({
+      where: { id: itemId, orderId },
+    });
+
+    if (!item) {
+      res.status(404).json({ error: '找不到商品項目' });
+      return;
+    }
+
+    const updateData: Record<string, unknown> = { updatedAt: new Date() };
+    if (unitPrice !== undefined) updateData.unitPrice = unitPrice;
+    if (quantity !== undefined) updateData.quantity = quantity;
+
+    const updated = await prisma.orderItem.update({
+      where: { id: itemId },
+      data: updateData,
+    });
+
+    if (unitPrice !== undefined || quantity !== undefined) {
+      const newLineTotal = (updated.unitPrice || 0) * (updated.quantity || 0);
+      await prisma.orderItem.update({
+        where: { id: itemId },
+        data: { lineTotal: newLineTotal },
+      });
+    }
+
+    await prisma.auditLog.create({
+      data: {
+        userId: req.user!.userId,
+        tenantId,
+        action: 'UPDATE_ORDER_ITEM',
+        entityType: 'OrderItem',
+        entityId: itemId,
+        metadata: JSON.stringify({ unitPrice, quantity }),
+      },
+    }).catch(console.error);
+
+    res.json(updated);
+  } catch (error) {
+    console.error('Error updating order item:', error);
+    res.status(500).json({ error: '更新商品項目失敗' });
+  }
+});
+
 export { orderDraftRouter, orderRouter };
 export default orderRouter;
