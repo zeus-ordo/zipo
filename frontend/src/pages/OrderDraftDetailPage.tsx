@@ -29,7 +29,9 @@ export function OrderDraftDetailPage() {
   const draft = data?.data;
 
   useEffect(() => {
+    console.log('[OrderDraftDetail] draft:', JSON.stringify(draft, null, 2));
     if (draft?.customer) {
+      console.log('[OrderDraftDetail] customer:', JSON.stringify(draft.customer, null, 2));
       setFormData(prev => ({
         ...prev,
         recipientName: draft.customer?.name || prev.recipientName,
