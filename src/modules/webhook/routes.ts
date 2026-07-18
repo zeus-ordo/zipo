@@ -101,11 +101,16 @@ async function handleTextEvent(event: LineWebhookEvent, tenantId: string, channe
 }
 
 router.get('/:channelId', async (req: Request, res: Response) => {
+  console.log('[LINE Webhook] GET request received', req.params.channelId);
   res.writeHead(200, { 'Content-Type': 'text/plain' });
   res.end('OK');
 });
 
 router.post('/:channelId', async (req: Request, res: Response) => {
+  console.log('[LINE Webhook] POST request received', req.params.channelId);
+  console.log('[LINE Webhook] Headers:', JSON.stringify(req.headers));
+  console.log('[LINE Webhook] Body:', JSON.stringify(req.body).slice(0, 500));
+
   res.status(200).json({ status: 'ok' });
 
   const channelIdParam = req.params.channelId;
