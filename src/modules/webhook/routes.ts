@@ -107,9 +107,7 @@ router.get('/:channelId', async (req: Request, res: Response) => {
 });
 
 router.post('/:channelId', async (req: Request, res: Response) => {
-  console.log('[LINE Webhook] POST request received', req.params.channelId);
-  console.log('[LINE Webhook] Headers:', JSON.stringify(req.headers));
-  console.log('[LINE Webhook] Body:', JSON.stringify(req.body).slice(0, 500));
+  console.log('[LINE Webhook] POST received', req.params.channelId);
 
   res.status(200).json({ status: 'ok' });
 
@@ -133,6 +131,8 @@ router.post('/:channelId', async (req: Request, res: Response) => {
     return;
   }
 
+  console.log('[LINE Webhook] Channel found, tenantId:', lineChannel.tenantId);
+
   const rawBody = JSON.stringify(req.body);
   if (!verifyLineSignature(lineChannel.channelSecret, rawBody, signatureStr)) {
     console.log('[LINE Webhook] Invalid signature');
@@ -141,6 +141,7 @@ router.post('/:channelId', async (req: Request, res: Response) => {
 
   const webhookRequest: LineWebhookRequest = req.body;
   const events = webhookRequest.events || [];
+  console.log('[LINE Webhook] Events count:', events.length);
 
   const textEvents: LineWebhookEvent[] = [];
 
@@ -160,12 +161,16 @@ router.post('/:channelId', async (req: Request, res: Response) => {
       continue;
     }
 
+    console.log('[LINE Webhook] Event type:', event.type, 'userId:', event.source?.userId);
     if (event.type === 'text' && event.source?.userId) {
       textEvents.push(event);
     }
   }
 
+  console.log('[LINE Webhook] Text events to process:', textEvents.length);
+
   for (const event of textEvents) {
+    console.log('[LINE Webhook] Processing text event:', event.message?.text);
     handleTextEvent(event, lineChannel.tenantId, lineChannel.channelId, lineChannel.channelAccessToken).catch((err) => {
       console.error('[LINE Webhook] Error handling text event:', err);
     });
