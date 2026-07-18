@@ -56,7 +56,12 @@ async function processTask(task: LlmTask): Promise<void> {
   console.log(`[LLM Queue] Extraction result: intent=${result.intent}, confidence=${result.confidence}, action=${result.draft_action}, items=${result.items.length}, missing=${result.missing_fields.join(',') || 'none'}`);
   console.log(`[LLM Queue] Customer info: name=${result.customer_info?.name}, phone=${result.customer_info?.phone}, address=${result.customer_info?.address}`);
 
-  if (result.draft_action === 'create_or_update' || result.draft_action === 'ask_followup') {
+  const customerInfoComplete = !!(result.customer_info?.name && result.customer_info?.phone && result.customer_info?.address);
+  const shouldCreateDraft = result.draft_action === 'create_or_update' ||
+    result.draft_action === 'ask_followup' ||
+    (result.intent === 'order' && customerInfoComplete && result.items.length > 0);
+
+  if (shouldCreateDraft) {
     await prisma.orderDraft.deleteMany({
       where: {
         tenantId: task.tenantId,
@@ -65,7 +70,7 @@ async function processTask(task: LlmTask): Promise<void> {
       },
     });
 
-    const draftStatus = result.missing_fields.length > 0 ? 'draft_pending_info' : 'draft_needs_review';
+    const draftStatus = customerInfoComplete ? 'draft_needs_review' : (result.missing_fields.length > 0 ? 'draft_pending_info' : 'draft_needs_review');
 
     if (result.customer_info && (result.customer_info.name || result.customer_info.phone)) {
       await prisma.customer.update({
