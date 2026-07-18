@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout } from '../components/Layout';
 import { lineApi } from '../api/client';
-import { MessageSquare, CheckCircle } from 'lucide-react';
+import { MessageSquare, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export function LineSettingsPage() {
@@ -12,8 +12,9 @@ export function LineSettingsPage() {
     channelSecret: '',
     channelAccessToken: '',
   });
+  const [verifying, setVerifying] = useState(false);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ['line-settings'],
     queryFn: () => lineApi.getSettings(),
   });
@@ -29,6 +30,10 @@ export function LineSettingsPage() {
   }, [data]);
 
   const settings = data?.data;
+
+  const webhookUrl = settings?.channelId
+    ? `${window.location.origin}/api/webhooks/line/${settings.channelId}`
+    : null;
 
   const updateMutation = useMutation({
     mutationFn: (data: { channelId: string; channelSecret: string; channelAccessToken: string }) =>
@@ -49,6 +54,26 @@ export function LineSettingsPage() {
       return;
     }
     updateMutation.mutate(formData);
+  };
+
+  const testWebhook = async () => {
+    if (!settings?.channelId) {
+      toast.error('請先儲存 LINE 設定');
+      return;
+    }
+    setVerifying(true);
+    try {
+      const res = await fetch(`/api/line/webhook/test/${settings.channelId}`);
+      if (res.ok) {
+        toast.success('Webhook 端點正常！請在 LINE App 發訊息測試');
+      } else {
+        toast.error('Webhook 端點異常');
+      }
+    } catch {
+      toast.error('Webhook 測試失敗');
+    } finally {
+      setVerifying(false);
+    }
   };
 
   return (
@@ -110,36 +135,42 @@ export function LineSettingsPage() {
 
         <div>
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">目前的狀態</h2>
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">連線狀態</h2>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Webhook 已啟用</span>
-                {settings?.webhookEnabled ? (
-                  <span className="flex items-center gap-1 text-green-600 text-sm">
-                    <CheckCircle size={16} />
-                    是
-                  </span>
-                ) : (
-                  <span className="text-gray-400 text-sm">否</span>
-                )}
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">LINE 連接狀態</span>
+                <span className="text-sm text-gray-600">LINE Channel</span>
                 {settings?.channelId ? (
                   <span className="flex items-center gap-1 text-green-600 text-sm">
                     <CheckCircle size={16} />
                     已設定
                   </span>
                 ) : (
-                  <span className="text-gray-400 text-sm">未設定</span>
+                  <span className="flex items-center gap-1 text-gray-400 text-sm">
+                    <XCircle size={16} />
+                    未設定
+                  </span>
                 )}
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Webhook 測試</span>
+                <button
+                  onClick={testWebhook}
+                  disabled={verifying || !settings?.channelId}
+                  className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 disabled:text-gray-400"
+                >
+                  <RefreshCw size={14} className={verifying ? 'animate-spin' : ''} />
+                  {verifying ? '測試中...' : '測試'}
+                </button>
               </div>
             </div>
 
-            {settings?.webhookUrl && (
+            {webhookUrl && (
               <div className="mt-4 pt-4 border-t">
                 <p className="text-sm text-gray-600 mb-2">Webhook URL</p>
-                <code className="text-xs bg-gray-100 px-2 py-1 rounded break-all">{settings.webhookUrl}</code>
+                <code className="text-xs bg-gray-100 px-2 py-1 rounded break-all block">{webhookUrl}</code>
+                <p className="text-xs text-gray-500 mt-2">
+                  請到 LINE Developers Console 填入以上 URL 並點擊 Verify
+                </p>
               </div>
             )}
           </div>
@@ -148,10 +179,11 @@ export function LineSettingsPage() {
             <h3 className="font-semibold text-blue-800 mb-2">設定說明</h3>
             <ol className="text-sm text-blue-700 space-y-1 list-decimal list-inside">
               <li>至 LINE Developers Console 建立 Messaging API Channel</li>
-              <li>取得 Channel ID、Channel Secret、Access Token</li>
-              <li>在「Messaging API」設定 Webhook URL 為上方的 URL</li>
-              <li>關閉自動回應功能，讓系統處理</li>
-              <li>填入右側表單並儲存</li>
+              <li>複製 Channel ID、Channel Secret、Access Token</li>
+              <li>在 LINE Developers Console 設定 Webhook URL（見上）</li>
+              <li>關閉自動回應功能（Auto-reply、Greeting）</li>
+              <li>在本頁填入資料並儲存</li>
+              <li>點上方「測試」確認 webhook 可用</li>
             </ol>
           </div>
         </div>
