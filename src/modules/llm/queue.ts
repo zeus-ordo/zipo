@@ -30,15 +30,26 @@ export function queueLlmExtraction(task: LlmTask): void {
 async function processTask(task: LlmTask): Promise<void> {
   console.log(`[LLM Queue] Processing task for conversation ${task.conversationId}`);
 
-  const messages = await prisma.message.findMany({
-    where: { conversationId: task.conversationId },
-    orderBy: { createdAt: 'desc' },
-    take: 5,
+  const lastConfirmedOrder = await prisma.order.findFirst({
+    where: {
+      conversationId: task.conversationId,
+      status: { not: 'cancelled' },
+    },
+    orderBy: { confirmedAt: 'desc' },
   });
-  const reversedMessages = messages.reverse();
 
-  console.log(`[LLM Queue] Messages sent to LLM:`);
-  reversedMessages.forEach((m, i) => {
+  const messages = await prisma.message.findMany({
+    where: {
+      conversationId: task.conversationId,
+      ...(lastConfirmedOrder?.confirmedAt
+        ? { createdAt: { gt: lastConfirmedOrder.confirmedAt } }
+        : {}),
+    },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  console.log(`[LLM Queue] Messages sent to LLM (after ${lastConfirmedOrder?.confirmedAt || 'beginning'}):`);
+  messages.forEach((m, i) => {
     console.log(`  [${i}] ${m.senderType}: ${m.content}`);
   });
 
@@ -46,7 +57,7 @@ async function processTask(task: LlmTask): Promise<void> {
     task.tenantId,
     task.conversationId,
     task.customerId,
-    (reversedMessages as any[]).map((m: any) => ({
+    messages.map((m: any) => ({
       senderType: m.senderType,
       content: m.content,
       createdAt: m.createdAt,

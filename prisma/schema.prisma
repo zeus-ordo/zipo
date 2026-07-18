@@ -201,6 +201,7 @@ model Order {
   id                    String   @id @default(uuid())
   tenantId              String
   orderDraftId          String?  @unique
+  conversationId        String?
   customerId            String
   status                String
   recipientName         String?
@@ -211,8 +212,8 @@ model Order {
   paymentMethod         String?
   paymentStatus         String?
   paymentLastFiveDigits String?
-  paymentNote           String?
-  staffNote             String?
+  paymentNote          String?
+  staffNote            String?
   confirmedByUserId     String?
   confirmedAt           DateTime?
   createdAt             DateTime @default(now())

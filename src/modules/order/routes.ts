@@ -248,6 +248,7 @@ orderDraftRouter.post('/:id/confirm', async (req, res) => {
         data: {
           tenantId,
           orderDraftId: draft.id,
+          conversationId: draft.conversationId,
           customerId: draft.customerId,
           status: 'confirmed',
           confirmedByUserId: userId,
