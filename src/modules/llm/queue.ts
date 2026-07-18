@@ -61,6 +61,17 @@ async function processTask(task: LlmTask): Promise<void> {
     result.draft_action === 'ask_followup' ||
     (result.intent === 'order' && customerInfoComplete && result.items.length > 0);
 
+  if (result.customer_info && (result.customer_info.name || result.customer_info.phone || result.customer_info.address)) {
+    await prisma.customer.update({
+      where: { id: task.customerId },
+      data: {
+        name: result.customer_info.name || null,
+        phone: result.customer_info.phone || null,
+        address: result.customer_info.address || null,
+      },
+    }).catch((err) => console.error('[LLM Queue] Failed to update customer info:', err));
+  }
+
   if (shouldCreateDraft) {
     await prisma.orderDraft.deleteMany({
       where: {
@@ -71,17 +82,6 @@ async function processTask(task: LlmTask): Promise<void> {
     });
 
     const draftStatus = customerInfoComplete ? 'draft_needs_review' : (result.missing_fields.length > 0 ? 'draft_pending_info' : 'draft_needs_review');
-
-    if (result.customer_info && (result.customer_info.name || result.customer_info.phone)) {
-      await prisma.customer.update({
-        where: { id: task.customerId },
-        data: {
-          name: result.customer_info.name || undefined,
-          phone: result.customer_info.phone || undefined,
-          address: result.customer_info.address || undefined,
-        },
-      }).catch((err) => console.error('[LLM Queue] Failed to update customer info:', err));
-    }
 
     const customer = await prisma.customer.findUnique({
       where: { id: task.customerId },
