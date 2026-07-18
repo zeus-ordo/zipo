@@ -33,9 +33,14 @@ async function processTask(task: LlmTask): Promise<void> {
   const messages = await prisma.message.findMany({
     where: { conversationId: task.conversationId },
     orderBy: { createdAt: 'desc' },
-    take: 10,
+    take: 20,
   });
   const reversedMessages = messages.reverse();
+
+  console.log(`[LLM Queue] Messages sent to LLM:`);
+  reversedMessages.forEach((m, i) => {
+    console.log(`  [${i}] ${m.senderType}: ${m.content}`);
+  });
 
   const result = await extractOrderInfo(
     task.tenantId,
