@@ -63,9 +63,9 @@ model Plan {
 ```prisma
 model Subscription {
   id            String   @id @default(uuid())
-  tenantId     String   @unique
+  tenantId     String   @unique  // 保持單一 current subscription
   planId       String
-  status        String   // active, cancelled, expired
+  status        String   // active, cancelled, expired, suspended
   expiresAt    DateTime // 方案到期日
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -73,8 +73,11 @@ model Subscription {
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   plan   Plan   @relation(fields: [planId], references: [id])
   @@index([tenantId])
+  @@index([expiresAt])  // 用於查詢即將到期的訂閱
 }
 ```
+
+**設計說明**：`tenantId @unique` 確保每個 tenant 只有一個當前訂閱。升級/降級時直接更新現有記錄，不建立新記錄。
 
 ### 新增 Model: BalanceTransaction
 
@@ -116,8 +119,22 @@ model Tenant {
 
 ### 超量處理
 
-- **已達上限**：阻擋新訂單，回傳錯誤訊息
-- **超額扣款**：使用儲值金扣款，單筆費用 $0.5 USD
+**無儲值金時**：
+- 已達上限：阻擋新訂單，回傳錯誤訊息「已達當月訂單上限，請升級方案或聯繫客服」
+
+**有儲值金時**：
+- 已達上限：可選擇使用儲值金超額，每筆 $0.5 USD
+- 店家可設定「超額時是否自動使用儲值金」
+
+**超額扣款流程**：
+1. 系統偵測到訂單超量
+2. 檢查店家是否有啟用自動超額並有足夠儲值金
+3. 若有：自動扣款並建立訂單
+4. 若無：回傳錯誤訊息
+
+### 用量計算時區
+
+所有時間計算使用 UTC，以確保跨時區一致性。台灣時間每月 1 日 00:00 = UTC 前一天 16:00。
 
 ## 5. 續費與到期
 
@@ -136,6 +153,19 @@ model Tenant {
 
 - 到期後自動停用，阻擋新訂單建立
 - Admin 可手動啟用
+
+### 新店家註冊
+
+- 新店家註冊時，自動加入「基礎版」方案
+- Subscription.status = 'active'
+- expiresAt = 30 天後（試用期）
+- 試用期結束前可付費升級
+
+### 方案變更（升級/降級）
+
+- **升級**：立即生效，收取差價 proration
+- **降級**：下次 billing cycle 生效，當前週期結束後自動切換
+- Proration 計算：(新方案日均價格 - 舊方案日均價格) × 剩餘天數
 
 ## 6. 金流 (綠界)
 
@@ -163,16 +193,26 @@ model Tenant {
 - 使用 ECPay SDK 或 REST API
 - 必須在 Render 設定 `ECPAY_MERCHANT_ID`、`ECPAY_HASH_KEY`、`ECPAY_HASH_IV`
 
+### 綠界 Webhook 驗證
+
+- 綠界回傳時需驗證 CheckMacValue 確保資料完整性
+- 驗證失敗的 request 需記錄並回傳 fail
+
+### LINE 頻道數量限制
+
+- 建立新頻道前檢查：`SELECT COUNT(*) FROM "LineChannel" WHERE "tenantId" = ?`
+- 若已達上限，回傳錯誤：「您的方案僅支援 N 個 LINE 頻道，請升級方案」
+
 ## 7. 功能權限控管
 
 ### 權限檢查點
 
 | 功能 | 檢查位置 |
 |------|----------|
-| LINE 頻道數量 | 建立頻道時 |
-| 商品目錄 | /products 頁面 |
-| 庫存管理 | /products 庫存欄位 |
-| 進階報表 | /dashboard 報表區塊 |
+| LINE 頻道數量 | 建立頻道時 (line/settings PATCH) |
+| 商品目錄 | /products 頁面 middleware |
+| 庫存管理 | /products 頁面 middleware |
+| 進階報表 | /dashboard 頁面 middleware |
 | API 存取 | API middleware |
 
 ### 實作方式
