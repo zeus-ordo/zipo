@@ -39,15 +39,16 @@ router.get('/current', requireTenant, async (req: Request, res: Response) => {
 });
 
 router.get('/tenant/:tenantId', async (req: Request, res: Response) => {
+  const tenantId = req.params.tenantId as string;
   const subscription = await prisma.subscription.findUnique({
-    where: { tenantId: req.params.tenantId },
+    where: { tenantId },
     include: { plan: true },
   });
   res.json(subscription);
 });
 
 router.patch('/tenant/:tenantId', async (req: Request, res: Response) => {
-  const { tenantId } = req.params;
+  const tenantId = req.params.tenantId as string;
   const { planId, status } = req.body;
 
   const subscription = await prisma.subscription.findUnique({

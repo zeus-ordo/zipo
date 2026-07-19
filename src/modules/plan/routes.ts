@@ -33,7 +33,7 @@ router.post('/', async (req: Request, res: Response) => {
 });
 
 router.patch('/:id', async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const { name, price, orderLimit, channelLimit, features, isActive, isDefault } = req.body;
 
   if (isDefault) {
@@ -51,7 +51,7 @@ router.patch('/:id', async (req: Request, res: Response) => {
 });
 
 router.delete('/:id', async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   await prisma.plan.update({
     where: { id },
     data: { isActive: false },
