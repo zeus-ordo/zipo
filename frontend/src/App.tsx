@@ -13,6 +13,8 @@ import { ConversationDetailPage } from './pages/ConversationDetailPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { LineSettingsPage } from './pages/LineSettingsPage';
 import { StoreSettingsPage } from './pages/StoreSettingsPage';
+import BillingPlansPage from './pages/admin/BillingPlansPage';
+import SubscriptionsPage from './pages/admin/SubscriptionsPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 const queryClient = new QueryClient({
@@ -83,6 +85,14 @@ function App() {
           <Route
             path="/store-settings"
             element={<ProtectedRoute><StoreSettingsPage /></ProtectedRoute>}
+          />
+          <Route
+            path="/admin/billing/plans"
+            element={<ProtectedRoute><BillingPlansPage /></ProtectedRoute>}
+          />
+          <Route
+            path="/admin/billing/subscriptions"
+            element={<ProtectedRoute><SubscriptionsPage /></ProtectedRoute>}
           />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
