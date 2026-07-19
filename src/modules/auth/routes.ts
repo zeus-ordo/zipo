@@ -99,6 +99,21 @@ router.post('/register', async (req, res) => {
         },
       });
       finalTenantId = tenant.id;
+
+      const defaultPlan = await prisma.plan.findFirst({
+        where: { isDefault: true },
+      });
+
+      if (defaultPlan) {
+        await prisma.subscription.create({
+          data: {
+            tenantId: tenant.id,
+            planId: defaultPlan.id,
+            status: 'active',
+            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          },
+        });
+      }
     }
 
     const existing = await prisma.user.findUnique({ where: { email } });
