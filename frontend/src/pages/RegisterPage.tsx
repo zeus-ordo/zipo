@@ -60,93 +60,100 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md p-8 bg-white rounded-xl shadow-lg">
-        <h1 className="text-2xl font-bold text-center text-gray-800 mb-2">註冊 ZIPO</h1>
-        <p className="text-center text-gray-500 mb-8">服飾業 LINE 接單客服系統</p>
+    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--color-bg)' }}>
+      <div className="w-full max-w-[400px] p-10" style={{ backgroundColor: 'var(--color-surface)', borderRadius: '20px', boxShadow: 'var(--shadow-elevated)' }}>
+        <div className="text-center mb-10">
+          <div className="w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center" style={{ backgroundColor: 'var(--color-text-primary)' }}>
+            <span className="text-white text-xl font-semibold">Z</span>
+          </div>
+          <h1 className="text-2xl font-semibold tracking-tight mb-2" style={{ color: 'var(--color-text-primary)' }}>註冊 ZIPO</h1>
+          <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>服飾業 LINE 接單客服系統</p>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg">{error}</div>
+            <div className="p-4 text-sm rounded-xl" style={{ backgroundColor: 'rgba(255, 59, 48, 0.1)', color: 'var(--color-error)' }}>{error}</div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+            <label className="label">姓名</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="input"
               placeholder="王小明"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">信箱</label>
+            <label className="label">信箱</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="input"
               placeholder="admin@example.com"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">密碼</label>
+            <label className="label">密碼</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="input"
               placeholder="••••••••"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">角色</label>
+            <label className="label">角色</label>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as 'admin' | 'staff')}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="input"
             >
               <option value="admin">管理員</option>
               <option value="staff">員工</option>
             </select>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3 pt-2">
             <input
               type="checkbox"
               id="newTenant"
               checked={isNewTenant}
               onChange={(e) => handleTenantToggle(e.target.checked)}
+              className="w-4 h-4 rounded"
+              style={{ accentColor: 'var(--color-accent)' }}
             />
-            <label htmlFor="newTenant" className="text-sm text-gray-700">建立新店家</label>
+            <label htmlFor="newTenant" className="text-sm" style={{ color: 'var(--color-text-primary)' }}>建立新店家</label>
           </div>
 
           {isNewTenant ? (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">店家名稱</label>
+              <label className="label">店家名稱</label>
               <input
                 type="text"
                 value={tenantName}
                 onChange={(e) => setTenantName(e.target.value)}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="input"
                 placeholder="我的服飾店"
                 required={isNewTenant}
               />
             </div>
           ) : (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">選擇店家</label>
+              <label className="label">選擇店家</label>
               <select
                 value={tenantId}
                 onChange={(e) => setTenantId(e.target.value)}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="input"
                 required={!isNewTenant}
               >
                 <option value="">請選擇店家</option>
@@ -160,13 +167,14 @@ export function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+            className="btn btn-primary w-full mt-6"
+            style={{ backgroundColor: 'var(--color-success)' }}
           >
             {loading ? '註冊中...' : '註冊'}
           </button>
 
-          <p className="text-center text-sm text-gray-500">
-            已有帳號？<a href="/login" className="text-blue-600 hover:underline">登入</a>
+          <p className="text-center text-sm mt-6" style={{ color: 'var(--color-text-secondary)' }}>
+            已有帳號？<a href="/login" className="font-medium" style={{ color: 'var(--color-accent)' }}>登入</a>
           </p>
         </form>
       </div>

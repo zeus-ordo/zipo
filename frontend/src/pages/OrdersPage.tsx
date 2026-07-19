@@ -3,13 +3,13 @@ import { Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { orderApi } from '../api/client';
 import { formatDistanceToNow } from '../utils/date';
-import { FileText, CheckCircle, Truck, Package, XCircle } from 'lucide-react';
+import { FileText, CheckCircle, Truck, Package, XCircle, ArrowRight } from 'lucide-react';
 
-const statusConfig = {
-  confirmed: { label: '已確認', color: 'text-blue-600 bg-blue-50', icon: CheckCircle },
-  ready_to_ship: { label: '待出貨', color: 'text-orange-600 bg-orange-50', icon: Truck },
-  shipped: { label: '已出貨', color: 'text-green-600 bg-green-50', icon: Package },
-  cancelled: { label: '已取消', color: 'text-gray-600 bg-gray-50', icon: XCircle },
+const statusConfig: Record<string, { label: string; badgeClass: string; icon: typeof CheckCircle }> = {
+  confirmed: { label: '已確認', badgeClass: 'badge-info', icon: CheckCircle },
+  ready_to_ship: { label: '待出貨', badgeClass: 'badge-warning', icon: Truck },
+  shipped: { label: '已出貨', badgeClass: 'badge-success', icon: Package },
+  cancelled: { label: '已取消', badgeClass: 'badge-error', icon: XCircle },
 };
 
 export function OrdersPage() {
@@ -22,64 +22,78 @@ export function OrdersPage() {
 
   return (
     <Layout>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">正式訂單</h1>
+      <div className="page-header">
+        <h1 className="page-title">正式訂單</h1>
+        <p className="page-subtitle">管理所有客戶訂單</p>
       </div>
 
       {isLoading ? (
-        <div className="text-center py-12 text-gray-500">載入中...</div>
+        <div className="table-container p-6">
+          <div className="space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex gap-8">
+                <div className="skeleton h-4 w-24" />
+                <div className="skeleton h-4 w-32" />
+                <div className="skeleton h-4 w-20" />
+                <div className="skeleton h-4 w-20" />
+              </div>
+            ))}
+          </div>
+        </div>
       ) : orders.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm p-12 text-center">
-          <FileText size={48} className="mx-auto text-gray-300 mb-4" />
-          <p className="text-gray-500">目前沒有正式訂單</p>
+        <div className="empty-state">
+          <FileText className="empty-state-icon" strokeWidth={1} />
+          <p className="empty-state-title">目前沒有正式訂單</p>
+          <p className="empty-state-description">當客戶透過 LINE 下單後，訂單會顯示在這裡</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50">
+        <div className="table-container">
+          <table className="table">
+            <thead>
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">訂單編號</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">客戶</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">金額</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">狀態</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">時間</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
+                <th>訂單編號</th>
+                <th>客戶</th>
+                <th>金額</th>
+                <th>狀態</th>
+                <th>時間</th>
+                <th></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody>
               {orders.map((order) => {
-                const config = statusConfig[order.status as keyof typeof statusConfig];
-                const StatusIcon = config?.icon || FileText;
+                const config = statusConfig[order.status] || { label: order.status, badgeClass: 'badge-info', icon: FileText };
+                const StatusIcon = config.icon;
                 const total = order.items?.reduce((sum, item) => sum + (item.lineTotal || 0), 0);
                 return (
-                  <tr key={order.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="font-mono text-sm text-gray-800">{order.id.slice(0, 8)}...</p>
+                  <tr key={order.id}>
+                    <td>
+                      <p className="font-mono text-sm" style={{ color: 'var(--color-text-primary)' }}>{order.id.slice(0, 8)}...</p>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="font-medium text-gray-800">
+                    <td>
+                      <p className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
                         {order.recipientName || order.customer?.lineDisplayName || '未知'}
                       </p>
-                      <p className="text-sm text-gray-500">{order.recipientPhone || '-'}</p>
+                      <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>{order.recipientPhone || '-'}</p>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="font-medium text-gray-800">${total?.toLocaleString() || 0}</p>
+                    <td>
+                      <p className="font-medium" style={{ color: 'var(--color-text-primary)' }}>${total?.toLocaleString() || 0}</p>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${config?.color || ''}`}>
-                        <StatusIcon size={14} />
-                        {config?.label || order.status}
+                    <td>
+                      <span className={`badge ${config.badgeClass}`}>
+                        <StatusIcon size={12} />
+                        {config.label}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
                       {formatDistanceToNow(order.createdAt)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td>
                       <Link
                         to={`/orders/${order.id}`}
-                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                        className="inline-flex items-center gap-1 text-sm font-medium"
+                        style={{ color: 'var(--color-accent)' }}
                       >
-                        查看
+                        查看 <ArrowRight size={14} />
                       </Link>
                     </td>
                   </tr>

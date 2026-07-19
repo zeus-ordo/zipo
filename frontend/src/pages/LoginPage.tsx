@@ -27,35 +27,40 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md p-8 bg-white rounded-xl shadow-lg">
-        <h1 className="text-2xl font-bold text-center text-gray-800 mb-2">ZIPO</h1>
-        <p className="text-center text-gray-500 mb-8">服飾業 LINE 接單客服系統</p>
+    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--color-bg)' }}>
+      <div className="w-full max-w-[400px] p-10" style={{ backgroundColor: 'var(--color-surface)', borderRadius: '20px', boxShadow: 'var(--shadow-elevated)' }}>
+        <div className="text-center mb-10">
+          <div className="w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center" style={{ backgroundColor: 'var(--color-text-primary)' }}>
+            <span className="text-white text-xl font-semibold">Z</span>
+          </div>
+          <h1 className="text-2xl font-semibold tracking-tight mb-2" style={{ color: 'var(--color-text-primary)' }}>ZIPO</h1>
+          <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>服飾業 LINE 接單客服系統</p>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg">{error}</div>
+            <div className="p-4 text-sm rounded-xl" style={{ backgroundColor: 'rgba(255, 59, 48, 0.1)', color: 'var(--color-error)' }}>{error}</div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">信箱</label>
+            <label className="label">信箱</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="input"
               placeholder="admin@example.com"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">密碼</label>
+            <label className="label">密碼</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="input"
               placeholder="••••••••"
               required
             />
@@ -64,14 +69,14 @@ export function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+            className="btn btn-primary w-full mt-6"
           >
             {loading ? '登入中...' : '登入'}
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-500 mt-4">
-          還沒有帳號？<a href="/register" className="text-blue-600 hover:underline">註冊</a>
+        <p className="text-center text-sm mt-8" style={{ color: 'var(--color-text-secondary)' }}>
+          還沒有帳號？<a href="/register" className="font-medium" style={{ color: 'var(--color-accent)' }}>註冊</a>
         </p>
       </div>
     </div>
