@@ -13,6 +13,7 @@ import { ConversationDetailPage } from './pages/ConversationDetailPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { LineSettingsPage } from './pages/LineSettingsPage';
 import { StoreSettingsPage } from './pages/StoreSettingsPage';
+import StoreBillingPage from './pages/StoreBillingPage';
 import BillingPlansPage from './pages/admin/BillingPlansPage';
 import SubscriptionsPage from './pages/admin/SubscriptionsPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -85,6 +86,10 @@ function App() {
           <Route
             path="/store-settings"
             element={<ProtectedRoute><StoreSettingsPage /></ProtectedRoute>}
+          />
+          <Route
+            path="/store/billing"
+            element={<ProtectedRoute><StoreBillingPage /></ProtectedRoute>}
           />
           <Route
             path="/admin/billing/plans"
