@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../lib/api';
+import { plansApi } from '../../api/client';
 
 interface Plan {
   id: string;
@@ -29,7 +29,7 @@ export default function BillingPlansPage() {
 
   const loadPlans = async () => {
     try {
-      const res = await api.get('/plans');
+      const res = await plansApi.list();
       setPlans(res.data);
     } catch (err) {
       console.error('Failed to load plans', err);
@@ -41,9 +41,9 @@ export default function BillingPlansPage() {
   const handleSave = async (plan: Partial<Plan>) => {
     try {
       if (plan.id) {
-        await api.patch(`/plans/${plan.id}`, plan);
+        await plansApi.update(plan.id, plan);
       } else {
-        await api.post('/plans', plan);
+        await plansApi.create(plan);
       }
       setEditingPlan(null);
       loadPlans();

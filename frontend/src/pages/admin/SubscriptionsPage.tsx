@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../lib/api';
+import { tenantApi, subscriptionsApi } from '../../api/client';
 
 interface Subscription {
   id: string;
@@ -21,8 +21,17 @@ export default function SubscriptionsPage() {
 
   const loadSubscriptions = async () => {
     try {
-      const res = await api.get('/tenants?include=subscription');
-      setSubscriptions(res.data);
+      const tenantsRes = await tenantApi.list();
+      const subscriptions: any[] = [];
+      for (const tenant of tenantsRes.data) {
+        try {
+          const subRes = await subscriptionsApi.byTenant(tenant.id);
+          subscriptions.push({ ...subRes.data, tenant });
+        } catch {
+          // Tenant might not have subscription
+        }
+      }
+      setSubscriptions(subscriptions);
     } catch (err) {
       console.error('Failed to load subscriptions', err);
     } finally {
@@ -32,7 +41,7 @@ export default function SubscriptionsPage() {
 
   const updateStatus = async (tenantId: string, status: string) => {
     try {
-      await api.patch(`/subscriptions/tenant/${tenantId}`, { status });
+      await subscriptionsApi.update(tenantId, { status });
       loadSubscriptions();
     } catch (err) {
       console.error('Failed to update subscription', err);

@@ -156,4 +156,31 @@ export const storeSettingsApi = {
   }) => api.patch('/store-settings', data),
 };
 
+// Plans
+export const plansApi = {
+  list: () => api.get('/plans'),
+  create: (data: any) => api.post('/plans', data),
+  update: (id: string, data: any) => api.patch(`/plans/${id}`, data),
+  delete: (id: string) => api.delete(`/plans/${id}`),
+};
+
+// Subscriptions
+export const subscriptionsApi = {
+  current: () => api.get('/subscriptions/current'),
+  byTenant: (tenantId: string) => api.get(`/subscriptions/tenant/${tenantId}`),
+  update: (tenantId: string, data: any) => api.patch(`/subscriptions/tenant/${tenantId}`, data),
+};
+
+// Balance
+export const balanceApi = {
+  current: () => api.get('/balance/current'),
+  deduct: (amount: number, description?: string) => api.post('/balance/deduct', { amount, description }),
+  topup: (amount: number, description?: string) => api.post('/balance/topup', { amount, description }),
+};
+
+// ECPay
+export const ecpayApi = {
+  createTopup: (amount: number, description?: string) => api.post('/ecpay/topup', { amount, description }),
+};
+
 export default api;

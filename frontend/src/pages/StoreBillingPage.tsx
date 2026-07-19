@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../lib/api';
+import { subscriptionsApi, balanceApi, plansApi, ecpayApi } from '../api/client';
 
 interface Subscription {
   id: string;
@@ -53,9 +53,9 @@ export default function StoreBillingPage() {
   const loadData = async () => {
     try {
       const [subRes, balRes, plansRes] = await Promise.all([
-        api.get('/subscriptions/current'),
-        api.get('/balance/current'),
-        api.get('/plans'),
+        subscriptionsApi.current(),
+        balanceApi.current(),
+        plansApi.list(),
       ]);
       setSubscription(subRes.data);
       setBalance(balRes.data);
@@ -72,7 +72,7 @@ export default function StoreBillingPage() {
     if (amount <= 0) return;
 
     try {
-      const res = await api.post('/ecpay/topup', { amount, description: 'Balance topup' });
+      const res = await ecpayApi.createTopup(amount, 'Balance topup');
       const { paymentURL, params } = res.data;
 
       const form = document.createElement('form');
@@ -95,7 +95,7 @@ export default function StoreBillingPage() {
   const changePlan = async (planId: string) => {
     if (!subscription) return;
     try {
-      await api.patch(`/subscriptions/tenant/${subscription.id}`, { planId });
+      await subscriptionsApi.update(subscription.tenantId, { planId });
       loadData();
     } catch (err) {
       console.error('Failed to change plan', err);
