@@ -15,6 +15,7 @@ import planRoutes from './modules/plan';
 import subscriptionRoutes from './modules/subscription';
 import { storeSettingRouter } from './modules/store-setting';
 import balanceRoutes from './modules/balance';
+import ecpayRoutes from './modules/ecpay';
 import { webhookRoutes } from './modules/webhook/routes';
 import { apiLimiter, authLimiter, webhookLimiter } from './middleware/rateLimit';
 import { globalErrorHandler, notFoundHandler } from './middleware/errorHandler';
@@ -74,6 +75,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/store-settings', storeSettingRouter);
 app.use('/api/balance', balanceRoutes);
+app.use('/api/ecpay', ecpayRoutes);
 app.use('/api/plans', planRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 
