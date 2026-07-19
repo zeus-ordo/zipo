@@ -11,6 +11,7 @@ import productRoutes from './modules/product/routes';
 import llmRoutes from './modules/llm/routes';
 import { notificationRoutes } from './modules/notification';
 import { adminRoutes, dashboardRouter } from './modules/admin';
+import planRoutes from './modules/plan';
 import { storeSettingRouter } from './modules/store-setting';
 import { webhookRoutes } from './modules/webhook/routes';
 import { apiLimiter, authLimiter, webhookLimiter } from './middleware/rateLimit';
@@ -70,6 +71,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/store-settings', storeSettingRouter);
+app.use('/api/plans', planRoutes);
 
 if (isProduction) {
   app.get('/{*path}', (_req, res) => {
