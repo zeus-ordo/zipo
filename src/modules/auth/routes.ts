@@ -42,6 +42,28 @@ router.post('/login', async (req, res) => {
       },
     }).catch(console.error);
 
+    // Auto-create subscription if tenant has none
+    if (user.tenantId) {
+      const existingSub = await prisma.subscription.findUnique({
+        where: { tenantId: user.tenantId },
+      });
+      if (!existingSub) {
+        const defaultPlan = await prisma.plan.findFirst({
+          where: { isDefault: true },
+        });
+        if (defaultPlan) {
+          await prisma.subscription.create({
+            data: {
+              tenantId: user.tenantId,
+              planId: defaultPlan.id,
+              status: 'active',
+              expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            },
+          });
+        }
+      }
+    }
+
     const response: AuthResponse = {
       user: {
         id: user.id,
