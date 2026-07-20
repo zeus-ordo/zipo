@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, FileText, Package, MessageSquare, Bell, Settings, LogOut, Store, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, FileText, Package, MessageSquare, Bell, Settings, LogOut, Menu, X, Store, CreditCard } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
 
@@ -12,6 +12,7 @@ const navItems = [
   { icon: Bell, label: '通知設定', path: '/notifications' },
   { icon: Settings, label: 'LINE 設定', path: '/line-settings' },
   { icon: Store, label: '商店設定', path: '/store-settings' },
+  { icon: CreditCard, label: '帳務訂閱', path: '/store/billing' },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
