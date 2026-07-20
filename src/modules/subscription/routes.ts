@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { authenticate } from '../../middleware/auth';
 import { requireTenant } from '../../middleware/tenant';
+import { requireRole } from '../../middleware/auth';
 import { prisma } from '../../lib/prisma';
 
 const router = Router();
@@ -38,7 +39,7 @@ router.get('/current', requireTenant, async (req: Request, res: Response) => {
   });
 });
 
-router.get('/tenant/:tenantId', async (req: Request, res: Response) => {
+router.get('/tenant/:tenantId', authenticate, async (req: Request, res: Response) => {
   const tenantId = req.params.tenantId as string;
   const subscription = await prisma.subscription.findUnique({
     where: { tenantId },
@@ -47,7 +48,7 @@ router.get('/tenant/:tenantId', async (req: Request, res: Response) => {
   res.json(subscription);
 });
 
-router.patch('/tenant/:tenantId', async (req: Request, res: Response) => {
+router.patch('/tenant/:tenantId', authenticate, async (req: Request, res: Response) => {
   const tenantId = req.params.tenantId as string;
   const { planId, status } = req.body;
 

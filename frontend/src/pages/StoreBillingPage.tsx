@@ -103,13 +103,15 @@ export default function StoreBillingPage() {
     }
   };
 
-  if (loading) return <div className="p-8">Loading...</div>;
+  if (loading) return <Layout><div className="p-8 text-center">Loading...</div></Layout>;
 
-  const orderPercent = subscription && subscription.plan.orderLimit > 0
+  if (!subscription) return <Layout><div className="p-8 text-center text-gray-500">No subscription found</div></Layout>;
+
+  const orderPercent = subscription.plan.orderLimit > 0
     ? (subscription.currentUsage.orderCount / subscription.plan.orderLimit) * 100
     : 0;
 
-  const channelPercent = (subscription!.currentUsage.channelCount / subscription!.plan.channelLimit) * 100;
+  const channelPercent = (subscription.currentUsage.channelCount / subscription.plan.channelLimit) * 100;
 
   return (
     <Layout>
