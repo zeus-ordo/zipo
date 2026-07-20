@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, FileText, Package, MessageSquare, Bell, Settings, LogOut, Menu, X, Store, CreditCard } from 'lucide-react';
+import { LayoutDashboard, FileText, Package, MessageSquare, Bell, Settings, LogOut, Menu, X, Store, CreditCard, ChevronRight } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
 
