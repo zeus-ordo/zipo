@@ -163,6 +163,93 @@ router.post('/subscriptions', async (req, res) => {
   }
 });
 
+router.patch('/customers/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { lineDisplayName, name, phone, address } = req.body;
+
+    const customer = await prisma.customer.findUnique({ where: { id } });
+    if (!customer) {
+      res.status(404).json({ error: 'Customer not found' });
+      return;
+    }
+
+    const updated = await prisma.customer.update({
+      where: { id },
+      data: {
+        ...(lineDisplayName !== undefined && { lineDisplayName }),
+        ...(name !== undefined && { name }),
+        ...(phone !== undefined && { phone }),
+        ...(address !== undefined && { address }),
+      },
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error('Error updating customer:', error);
+    res.status(500).json({ error: '更新失敗' });
+  }
+});
+
+router.post('/customers/:id/refresh-line-profile', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const customer = await prisma.customer.findUnique({ where: { id } });
+    if (!customer) {
+      res.status(404).json({ error: 'Customer not found' });
+      return;
+    }
+
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: customer.tenantId },
+      include: { lineChannels: true },
+    });
+
+    if (!tenant || !tenant.lineChannels[0]?.channelAccessToken) {
+      res.status(400).json({ error: 'No LINE channel configured' });
+      return;
+    }
+
+    const accessToken = tenant.lineChannels[0].channelAccessToken;
+    const profileRes = await fetch(`https://api.line.me/v2/bot/profile/${customer.lineUserId}`, {
+      headers: { 'Authorization': `Bearer ${accessToken}` },
+    });
+
+    if (!profileRes.ok) {
+      res.status(400).json({ error: 'Failed to get LINE profile' });
+      return;
+    }
+
+    const profile = await profileRes.json();
+
+    const updated = await prisma.customer.update({
+      where: { id },
+      data: {
+        lineDisplayName: profile.displayName,
+        linePictureUrl: profile.pictureUrl,
+      },
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error('Error refreshing LINE profile:', error);
+    res.status(500).json({ error: '刷新失敗' });
+  }
+});
+
+router.get('/customers', async (req, res) => {
+  try {
+    const customers = await prisma.customer.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json(customers);
+  } catch (error) {
+    console.error('Error fetching customers:', error);
+    res.status(500).json({ error: '取得失敗' });
+  }
+});
+
 router.get('/debug/users', async (req, res) => {
   try {
     const users = await prisma.user.findMany({
