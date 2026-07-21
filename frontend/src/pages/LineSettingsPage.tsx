@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout } from '../components/Layout';
 import { lineApi } from '../api/client';
-import { MessageSquare, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
+import { MessageSquare, CheckCircle, XCircle, RefreshCw, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export function LineSettingsPage() {
@@ -12,6 +12,7 @@ export function LineSettingsPage() {
     channelSecret: '',
     channelAccessToken: '',
   });
+  const [showSecret, setShowSecret] = useState(false);
   const [verifying, setVerifying] = useState(false);
 
   const { data, isLoading, refetch } = useQuery({
@@ -102,13 +103,22 @@ export function LineSettingsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Channel Secret *</label>
-                  <input
-                    type="password"
-                    value={formData.channelSecret}
-                    onChange={(e) => setFormData({ ...formData, channelSecret: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    placeholder="您的 Channel Secret"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showSecret ? 'text' : 'password'}
+                      value={formData.channelSecret}
+                      onChange={(e) => setFormData({ ...formData, channelSecret: e.target.value })}
+                      className="w-full px-4 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      placeholder="您的 Channel Secret"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowSecret(!showSecret)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showSecret ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                   <p className="text-xs text-gray-400 mt-1">若不修改請留空</p>
                 </div>
                 <div>
