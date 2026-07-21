@@ -11,25 +11,34 @@ router.use(authenticate);
 router.get('/current', requireTenant, async (req: Request, res: Response) => {
   const tenantId = req.user!.tenantId!;
 
+  console.log('[Subscription] Checking for tenant:', tenantId);
+
   let subscription = await prisma.subscription.findUnique({
     where: { tenantId },
     include: { plan: true },
   });
 
   if (!subscription) {
+    console.log('[Subscription] No subscription found, creating one...');
     const defaultPlan = await prisma.plan.findFirst({
       where: { isDefault: true },
     });
+    console.log('[Subscription] Default plan:', defaultPlan);
     if (defaultPlan) {
-      subscription = await prisma.subscription.create({
-        data: {
-          tenantId,
-          planId: defaultPlan.id,
-          status: 'active',
-          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        },
-        include: { plan: true },
-      });
+      try {
+        subscription = await prisma.subscription.create({
+          data: {
+            tenantId,
+            planId: defaultPlan.id,
+            status: 'active',
+            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          },
+          include: { plan: true },
+        });
+        console.log('[Subscription] Created subscription:', subscription);
+      } catch (err) {
+        console.error('[Subscription] Error creating subscription:', err);
+      }
     }
   }
 
