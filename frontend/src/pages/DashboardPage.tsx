@@ -15,8 +15,8 @@ export function DashboardPage() {
 
   const statCards = [
     { label: t('dashboard.today_orders'), value: stats?.todayOrders ?? 0, icon: FileText, accentColor: 'var(--color-accent)' },
-    { label: t('orders.draft_pending_info') || t('dashboard.pending_orders'), value: stats?.pendingDrafts ?? 0, icon: Package, accentColor: 'var(--color-warning)' },
-    { label: t('orders.status_ready_to_ship') || '待出貨', value: stats?.readyToShip ?? 0, icon: Truck, accentColor: 'var(--color-error)' },
+    { label: t('dashboard.pending_orders'), value: stats?.pendingDrafts ?? 0, icon: Package, accentColor: 'var(--color-warning)' },
+    { label: t('orders.status_ready_to_ship'), value: stats?.readyToShip ?? 0, icon: Truck, accentColor: 'var(--color-error)' },
     { label: t('dashboard.month_orders'), value: stats?.monthOrders ?? 0, icon: FileText, accentColor: 'var(--color-success)' },
     { label: t('dashboard.total_customers'), value: stats?.totalCustomers ?? 0, icon: Users, accentColor: '#8e44ad' },
   ];
