@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
@@ -6,6 +7,7 @@ import { formatDistanceToNow } from '../utils/date';
 import { MessageSquare } from 'lucide-react';
 
 export function ConversationsPage() {
+  const { t } = useTranslation();
   const { data, isLoading } = useQuery({
     queryKey: ['conversations'],
     queryFn: () => conversationApi.list({ limit: 50 }),
@@ -16,26 +18,26 @@ export function ConversationsPage() {
   return (
     <Layout>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">對話紀錄</h1>
+        <h1 className="text-2xl font-bold text-gray-800">{t('conversations.title')}</h1>
       </div>
 
       {isLoading ? (
-        <div className="text-center py-12 text-gray-500">載入中...</div>
+        <div className="text-center py-12 text-gray-500">{t('common.loading')}</div>
       ) : conversations.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm p-12 text-center">
           <MessageSquare size={48} className="mx-auto text-gray-300 mb-4" />
-          <p className="text-gray-500">目前沒有對話紀錄</p>
+          <p className="text-gray-500">{t('conversations.no_conversations')}</p>
         </div>
       ) : (
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">客戶</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">最後訊息</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">訊息數</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">時間</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('conversations.customer')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('conversations.last_message')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('dashboard.message_count')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('common.date')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -43,13 +45,13 @@ export function ConversationsPage() {
                 <tr key={conv.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <p className="font-medium text-gray-800">
-                      {conv.customer?.lineDisplayName || '未知'}
+                      {conv.customer?.lineDisplayName || '-'}
                     </p>
                     <p className="text-sm text-gray-500">{conv.customer?.lineUserId}</p>
                   </td>
                   <td className="px-6 py-4">
                     <p className="text-gray-600 line-clamp-1">
-                      {conv.lastMessage?.content || '無訊息'}
+                      {conv.lastMessage?.content || '-'}
                     </p>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
@@ -63,7 +65,7 @@ export function ConversationsPage() {
                       to={`/conversations/${conv.id}`}
                       className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                     >
-                      查看
+                      {t('common.view')}
                     </Link>
                   </td>
                 </tr>

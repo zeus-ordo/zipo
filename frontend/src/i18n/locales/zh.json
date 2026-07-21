@@ -114,7 +114,12 @@
     "credit_card": "信用卡",
     "cash_on_delivery": "貨到付款",
     "transfer": "轉帳",
-    "cod": "取貨付款"
+    "cod": "取貨付款",
+    "meet_up": "面交",
+    "draft_needs_review": "待確認",
+    "draft_ready": "可確認",
+    "status_ready_to_ship": "待出貨",
+    "status_shipped": "已出貨"
   },
   "orderDrafts": {
     "title": "訂單草稿",
@@ -131,6 +136,7 @@
     "stock": "庫存",
     "variants": "規格",
     "import_excel": "匯入 Excel",
+    "import_success": "匯入成功",
     "export": "匯出",
     "active": "啟用",
     "inactive": "停用",

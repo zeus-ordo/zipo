@@ -1,18 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { orderApi } from '../api/client';
 import { formatDistanceToNow } from '../utils/date';
 import { FileText, CheckCircle, Truck, Package, XCircle, ArrowRight } from 'lucide-react';
 
-const statusConfig: Record<string, { label: string; badgeClass: string; icon: typeof CheckCircle }> = {
-  confirmed: { label: '已確認', badgeClass: 'badge-info', icon: CheckCircle },
-  ready_to_ship: { label: '待出貨', badgeClass: 'badge-warning', icon: Truck },
-  shipped: { label: '已出貨', badgeClass: 'badge-success', icon: Package },
-  cancelled: { label: '已取消', badgeClass: 'badge-error', icon: XCircle },
-};
-
 export function OrdersPage() {
+  const { t } = useTranslation();
   const { data, isLoading } = useQuery({
     queryKey: ['orders'],
     queryFn: () => orderApi.list({ limit: 50 }),
@@ -20,11 +15,18 @@ export function OrdersPage() {
 
   const orders = data?.data?.data ?? [];
 
+  const statusConfig: Record<string, { labelKey: string; badgeClass: string; icon: typeof CheckCircle }> = {
+    confirmed: { labelKey: 'orders.status_confirmed', badgeClass: 'badge-info', icon: CheckCircle },
+    ready_to_ship: { labelKey: 'orders.status_ready_to_ship', badgeClass: 'badge-warning', icon: Truck },
+    shipped: { labelKey: 'orders.status_shipped', badgeClass: 'badge-success', icon: Package },
+    cancelled: { labelKey: 'orders.status_cancelled', badgeClass: 'badge-error', icon: XCircle },
+  };
+
   return (
     <Layout>
       <div className="page-header">
-        <h1 className="page-title">正式訂單</h1>
-        <p className="page-subtitle">管理所有客戶訂單</p>
+        <h1 className="page-title">{t('orders.title')}</h1>
+        <p className="page-subtitle">{t('orders.drafts')}</p>
       </div>
 
       {isLoading ? (
@@ -43,25 +45,25 @@ export function OrdersPage() {
       ) : orders.length === 0 ? (
         <div className="empty-state">
           <FileText className="empty-state-icon" strokeWidth={1} />
-          <p className="empty-state-title">目前沒有正式訂單</p>
-          <p className="empty-state-description">當客戶透過 LINE 下單後，訂單會顯示在這裡</p>
+          <p className="empty-state-title">{t('orders.no_orders')}</p>
+          <p className="empty-state-description">{t('orders.drafts')}</p>
         </div>
       ) : (
         <div className="table-container">
           <table className="table">
             <thead>
               <tr>
-                <th>訂單編號</th>
-                <th>客戶</th>
-                <th>金額</th>
-                <th>狀態</th>
-                <th>時間</th>
+                <th>{t('orders.title')}</th>
+                <th>{t('conversations.customer')}</th>
+                <th>{t('common.total')}</th>
+                <th>{t('common.status')}</th>
+                <th>{t('common.date')}</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
               {orders.map((order) => {
-                const config = statusConfig[order.status] || { label: order.status, badgeClass: 'badge-info', icon: FileText };
+                const config = statusConfig[order.status] || { labelKey: order.status, badgeClass: 'badge-info', icon: FileText };
                 const StatusIcon = config.icon;
                 const total = order.items?.reduce((sum, item) => sum + (item.lineTotal || 0), 0);
                 return (
@@ -71,7 +73,7 @@ export function OrdersPage() {
                     </td>
                     <td>
                       <p className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
-                        {order.recipientName || order.customer?.lineDisplayName || '未知'}
+                        {order.recipientName || order.customer?.lineDisplayName || '-'}
                       </p>
                       <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>{order.recipientPhone || '-'}</p>
                     </td>
@@ -81,7 +83,7 @@ export function OrdersPage() {
                     <td>
                       <span className={`badge ${config.badgeClass}`}>
                         <StatusIcon size={12} />
-                        {config.label}
+                        {t(config.labelKey)}
                       </span>
                     </td>
                     <td className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
@@ -93,7 +95,7 @@ export function OrdersPage() {
                         className="inline-flex items-center gap-1 text-sm font-medium"
                         style={{ color: 'var(--color-accent)' }}
                       >
-                        查看 <ArrowRight size={14} />
+                        {t('common.view')} <ArrowRight size={14} />
                       </Link>
                     </td>
                   </tr>

@@ -1,9 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Layout } from '../components/Layout';
 import { dashboardApi } from '../api/client';
 import { FileText, Package, Truck, Users } from 'lucide-react';
 
 export function DashboardPage() {
+  const { t } = useTranslation();
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard'],
     queryFn: () => dashboardApi.stats(),
@@ -12,18 +14,18 @@ export function DashboardPage() {
   const stats = data?.data;
 
   const statCards = [
-    { label: '今日新訂單', value: stats?.todayOrders ?? 0, icon: FileText, accentColor: 'var(--color-accent)' },
-    { label: '待確認草稿', value: stats?.pendingDrafts ?? 0, icon: Package, accentColor: 'var(--color-warning)' },
-    { label: '待出貨', value: stats?.readyToShip ?? 0, icon: Truck, accentColor: 'var(--color-error)' },
-    { label: '本月訂單', value: stats?.monthOrders ?? 0, icon: FileText, accentColor: 'var(--color-success)' },
-    { label: '總客戶數', value: stats?.totalCustomers ?? 0, icon: Users, accentColor: '#8e44ad' },
+    { label: t('dashboard.today_orders'), value: stats?.todayOrders ?? 0, icon: FileText, accentColor: 'var(--color-accent)' },
+    { label: t('orders.draft_pending_info') || t('dashboard.pending_orders'), value: stats?.pendingDrafts ?? 0, icon: Package, accentColor: 'var(--color-warning)' },
+    { label: t('orders.status_ready_to_ship') || '待出貨', value: stats?.readyToShip ?? 0, icon: Truck, accentColor: 'var(--color-error)' },
+    { label: t('dashboard.month_orders'), value: stats?.monthOrders ?? 0, icon: FileText, accentColor: 'var(--color-success)' },
+    { label: t('dashboard.total_customers'), value: stats?.totalCustomers ?? 0, icon: Users, accentColor: '#8e44ad' },
   ];
 
   return (
     <Layout>
       <div className="page-header">
-        <h1 className="page-title">儀表板</h1>
-        <p className="page-subtitle">歡迎回來！以下是今日概況。</p>
+        <h1 className="page-title">{t('dashboard.title')}</h1>
+        <p className="page-subtitle">{t('dashboard.recent_orders')}</p>
       </div>
 
       {isLoading ? (

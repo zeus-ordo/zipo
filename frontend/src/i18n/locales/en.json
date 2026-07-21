@@ -114,7 +114,12 @@
     "credit_card": "Credit Card",
     "cash_on_delivery": "Cash on Delivery",
     "transfer": "Transfer",
-    "cod": "COD"
+    "cod": "COD",
+    "meet_up": "Meet Up",
+    "draft_needs_review": "Needs Review",
+    "draft_ready": "Ready to Confirm",
+    "status_ready_to_ship": "Ready to Ship",
+    "status_shipped": "Shipped"
   },
   "orderDrafts": {
     "title": "Order Drafts",
@@ -131,6 +136,7 @@
     "stock": "Stock",
     "variants": "Variants",
     "import_excel": "Import Excel",
+    "import_success": "Import Successful",
     "export": "Export",
     "active": "Active",
     "inactive": "Inactive",

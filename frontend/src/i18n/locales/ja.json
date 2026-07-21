@@ -114,7 +114,12 @@
     "credit_card": "クレジットカード",
     "cash_on_delivery": "代引",
     "transfer": "銀行振込",
-    "cod": "代引き"
+    "cod": "代引き",
+    "meet_up": "面交",
+    "draft_needs_review": "確認必要",
+    "draft_ready": "確認可能",
+    "status_ready_to_ship": "出荷待ち",
+    "status_shipped": "出荷済み"
   },
   "orderDrafts": {
     "title": "注文下書き",
@@ -131,6 +136,7 @@
     "stock": "在庫",
     "variants": "規格",
     "import_excel": "Excel インポート",
+    "import_success": "インポート成功",
     "export": "エクスポート",
     "active": "有効",
     "inactive": "無効",
