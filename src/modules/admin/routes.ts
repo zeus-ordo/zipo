@@ -119,6 +119,50 @@ router.get('/audit-logs', async (req, res) => {
   }
 });
 
+router.post('/subscriptions', async (req, res) => {
+  try {
+    const { tenantId, planId } = req.body;
+
+    if (!tenantId || !planId) {
+      res.status(400).json({ error: 'tenantId and planId are required' });
+      return;
+    }
+
+    const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+    if (!tenant) {
+      res.status(404).json({ error: 'Tenant not found' });
+      return;
+    }
+
+    const plan = await prisma.plan.findUnique({ where: { id: planId } });
+    if (!plan) {
+      res.status(404).json({ error: 'Plan not found' });
+      return;
+    }
+
+    const existing = await prisma.subscription.findUnique({ where: { tenantId } });
+    if (existing) {
+      res.status(409).json({ error: 'Subscription already exists', subscription: existing });
+      return;
+    }
+
+    const subscription = await prisma.subscription.create({
+      data: {
+        tenantId,
+        planId,
+        status: 'active',
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      },
+      include: { plan: true },
+    });
+
+    res.status(201).json(subscription);
+  } catch (error) {
+    console.error('Error creating subscription:', error);
+    res.status(500).json({ error: '建立訂閱失敗' });
+  }
+});
+
 router.get('/debug/users', async (req, res) => {
   try {
     const users = await prisma.user.findMany({
