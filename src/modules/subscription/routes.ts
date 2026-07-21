@@ -11,10 +11,27 @@ router.use(authenticate);
 router.get('/current', requireTenant, async (req: Request, res: Response) => {
   const tenantId = req.user!.tenantId!;
 
-  const subscription = await prisma.subscription.findUnique({
+  let subscription = await prisma.subscription.findUnique({
     where: { tenantId },
     include: { plan: true },
   });
+
+  if (!subscription) {
+    const defaultPlan = await prisma.plan.findFirst({
+      where: { isDefault: true },
+    });
+    if (defaultPlan) {
+      subscription = await prisma.subscription.create({
+        data: {
+          tenantId,
+          planId: defaultPlan.id,
+          status: 'active',
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
+        include: { plan: true },
+      });
+    }
+  }
 
   if (!subscription) {
     return res.status(404).json({ error: 'No subscription found' });
