@@ -103,7 +103,7 @@ function App() {
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>
-    </ErrorBoundary>
+  </ErrorBoundary>
   );
 }
 
