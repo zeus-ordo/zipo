@@ -27,30 +27,6 @@
   --shadow-sidebar: -2px 0 12px rgba(0, 0, 0, 0.06);
 }
 
-.dark {
-  --color-bg: #1a1a1c;
-  --color-surface: #2a2a2c;
-  --color-surface-hover: #3a3a3c;
-  --color-border: #48484a;
-  --color-border-subtle: #3a3a3c;
-
-  --color-text-primary: #f5f5f7;
-  --color-text-secondary: #a1a1a6;
-  --color-text-tertiary: #636366;
-
-  --color-accent: #0a84ff;
-  --color-accent-hover: #409cff;
-  --color-accent-light: rgba(10, 132, 255, 0.15);
-
-  --color-success: #30d158;
-  --color-warning: #ff9f0a;
-  --color-error: #ff453a;
-
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.4);
-  --shadow-sidebar: -2px 0 12px rgba(0, 0, 0, 0.3);
-}
-
 * {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

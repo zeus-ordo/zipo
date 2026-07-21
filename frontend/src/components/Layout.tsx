@@ -4,7 +4,6 @@ import { LayoutDashboard, FileText, Package, MessageSquare, Bell, Settings, LogO
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
 import { LanguageSwitcher } from './LanguageSwitcher';
-import { DarkModeToggle } from './DarkModeToggle';
 
 const storeNavItems = [
   { icon: LayoutDashboard, labelKey: 'nav.dashboard', path: '/dashboard' },
@@ -122,9 +121,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         <div className="absolute bottom-0 left-0 right-0" style={{ borderTop: '1px solid var(--color-border-subtle)', backgroundColor: 'var(--color-surface)' }}>
           <div className="p-4">
-            <DarkModeToggle />
-          </div>
-          <div className="p-4 pt-0">
             <LanguageSwitcher />
           </div>
           <div className="p-4 pt-0">
