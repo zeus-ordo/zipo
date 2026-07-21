@@ -1,4 +1,5 @@
 import { Component, ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Toaster } from 'react-hot-toast';
 
 interface Props {
@@ -10,7 +11,7 @@ interface State {
   error: Error | null;
 }
 
-export class ErrorBoundary extends Component<Props, State> {
+class ErrorBoundaryContent extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -25,19 +26,21 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   render() {
+    const { t } = useTranslation();
+
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-          <div className="bg-white rounded-xl shadow-lg p-8 max-w-md text-center">
-            <h1 className="text-xl font-bold text-red-600 mb-4">發生錯誤</h1>
-            <p className="text-gray-600 mb-4">
-              {this.state.error?.message || '未預期的錯誤發生，請重新整理頁面'}
+        <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--color-bg)' }}>
+          <div className="card rounded-xl p-8 max-w-md text-center">
+            <h1 className="text-xl font-bold mb-4" style={{ color: 'var(--color-error)' }}>{t('errors.error_occurred')}</h1>
+            <p className="mb-4" style={{ color: 'var(--color-text-secondary)' }}>
+              {this.state.error?.message || t('errors.unexpected_error')}
             </p>
             <button
               onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="btn btn-primary"
             >
-              重新整理
+              {t('errors.refresh_page')}
             </button>
           </div>
         </div>
@@ -51,19 +54,19 @@ export class ErrorBoundary extends Component<Props, State> {
           toastOptions={{
             duration: 3000,
             style: {
-              background: '#333',
-              color: '#fff',
+              background: 'var(--color-text-primary)',
+              color: 'var(--color-surface)',
             },
             success: {
               iconTheme: {
-                primary: '#22c55e',
-                secondary: '#fff',
+                primary: 'var(--color-success)',
+                secondary: 'var(--color-surface)',
               },
             },
             error: {
               iconTheme: {
-                primary: '#ef4444',
-                secondary: '#fff',
+                primary: 'var(--color-error)',
+                secondary: 'var(--color-surface)',
               },
             },
           }}
@@ -73,3 +76,5 @@ export class ErrorBoundary extends Component<Props, State> {
     );
   }
 }
+
+export const ErrorBoundary = ErrorBoundaryContent;

@@ -301,16 +301,19 @@ export function ProductsPage() {
   return (
     <Layout>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">{t('products.title')}</h1>
+        <h1 className="page-title">{t('products.title')}</h1>
         <div className="flex gap-3">
-          <label className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 cursor-pointer">
+          <label
+            className="btn btn-secondary cursor-pointer"
+            style={{ cursor: 'pointer' }}
+          >
             <Upload size={18} />
             {importing ? t('common.loading') : t('products.import_excel')}
             <input type="file" accept=".xlsx,.xls,.csv" onChange={handleImport} className="hidden" disabled={importing} />
           </label>
           <button
             onClick={() => { resetForm(); setShowModal(true); }}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="btn btn-primary"
           >
             <Plus size={18} />
             {t('products.add_product')}
@@ -319,57 +322,63 @@ export function ProductsPage() {
       </div>
 
       {isLoading ? (
-        <div className="text-center py-12 text-gray-500">{t('common.loading')}</div>
+        <div className="text-center py-12" style={{ color: 'var(--color-text-secondary)' }}>{t('common.loading')}</div>
       ) : products.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm p-12 text-center">
-          <Package size={48} className="mx-auto text-gray-300 mb-4" />
-          <p className="text-gray-500">{t('products.no_products')}</p>
+        <div className="card p-12 text-center">
+          <Package size={48} className="mx-auto mb-4" style={{ color: 'var(--color-text-tertiary)' }} />
+          <p style={{ color: 'var(--color-text-secondary)' }}>{t('products.no_products')}</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50">
+        <div className="table-container">
+          <table className="table">
+            <thead>
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('products.product_name')}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('products.category')}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('products.variants')}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('common.price')}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('common.actions')}</th>
+                <th>{t('products.product_name')}</th>
+                <th>{t('products.category')}</th>
+                <th>{t('products.variants')}</th>
+                <th>{t('common.price')}</th>
+                <th>{t('common.status')}</th>
+                <th>{t('common.actions')}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody>
               {products.map((product) => (
-                <tr key={product.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <p className="font-medium text-gray-800">{product.name}</p>
-                    <p className="text-sm text-gray-500">{t('products.sku')}: {product.sku || '-'}</p>
+                <tr key={product.id}>
+                  <td>
+                    <p className="font-medium" style={{ color: 'var(--color-text-primary)' }}>{product.name}</p>
+                    <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>{t('products.sku')}: {product.sku || '-'}</p>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                  <td style={{ color: 'var(--color-text-secondary)' }}>
                     {product.category || '-'}
                   </td>
-                  <td className="px-6 py-4">
+                  <td>
                     <div className="flex flex-wrap gap-1">
                       {product.variants?.map((v: ProductVariant) => (
-                        <span key={v.id} className="px-2 py-1 bg-gray-100 rounded text-xs">
+                        <span key={v.id} className="badge">
                           {v.color || '-'} / {v.size || '-'}
                         </span>
                       ))}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <td style={{ color: 'var(--color-text-primary)' }}>
                     ${product.basePrice?.toLocaleString() || '-'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${product.isActive ? 'text-green-600 bg-green-50' : 'text-gray-600 bg-gray-50'}`}>
+                  <td>
+                    <span
+                      className="badge"
+                      style={{
+                        backgroundColor: product.isActive ? 'rgba(52, 199, 89, 0.15)' : 'var(--color-bg)',
+                        color: product.isActive ? 'var(--color-success)' : 'var(--color-text-secondary)'
+                      }}
+                    >
                       {product.isActive ? t('products.active') : t('products.inactive')}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td>
                     <div className="flex gap-3">
                       <button
                         onClick={() => openEditModal(product)}
-                        className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
+                        className="btn-ghost text-sm flex items-center gap-1"
                       >
                         <Pencil size={14} />
                         {t('common.edit')}
@@ -380,7 +389,8 @@ export function ProductsPage() {
                             deleteMutation.mutate(product.id);
                           }
                         }}
-                        className="text-red-600 hover:text-red-800 text-sm"
+                        className="btn-ghost text-sm"
+                        style={{ color: 'var(--color-error)' }}
                       >
                         {t('common.delete')}
                       </button>
@@ -394,13 +404,13 @@ export function ProductsPage() {
       )}
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+          <div className="card rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-800">
+              <h2 className="text-xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
                 {editingProduct ? t('products.edit_product') : t('products.add_product')}
               </h2>
-              <button onClick={closeModal} className="text-gray-500 hover:text-gray-700">
+              <button onClick={closeModal} className="btn-ghost">
                 <X size={24} />
               </button>
             </div>
@@ -408,61 +418,61 @@ export function ProductsPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('products.product_name')} *</label>
+                  <label className="label">{t('products.product_name')} *</label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="input"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('products.sku')}</label>
+                  <label className="label">{t('products.sku')}</label>
                   <input
                     type="text"
                     value={formData.sku}
                     onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="input"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('products.category')}</label>
+                  <label className="label">{t('products.category')}</label>
                   <input
                     type="text"
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="input"
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('common.price')}</label>
+                  <label className="label">{t('common.price')}</label>
                   <input
                     type="number"
                     value={formData.basePrice}
                     onChange={(e) => setFormData({ ...formData, basePrice: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="input"
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('products.description')}</label>
+                  <label className="label">{t('products.description')}</label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="input"
                     rows={3}
                   />
                 </div>
               </div>
 
               {editingProduct && (
-                <div className="border-t pt-4">
+                <div className="border-t pt-4" style={{ borderColor: 'var(--color-border-subtle)' }}>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg font-semibold text-gray-800">{t('products.variants')}</h3>
+                    <h3 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>{t('products.variants')}</h3>
                     <button
                       type="button"
                       onClick={addVariant}
-                      className="flex items-center gap-1 px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                      className="btn btn-secondary text-sm"
                     >
                       <Plus size={14} />
                       {t('products.add_variant')}
@@ -471,7 +481,7 @@ export function ProductsPage() {
 
                   <div className="space-y-3">
                     {variants.map((variant, index) => (
-                      <div key={index} className="flex gap-2 items-start p-3 bg-gray-50 rounded-lg">
+                      <div key={index} className="flex gap-2 items-start p-3 rounded-lg" style={{ backgroundColor: 'var(--color-bg)' }}>
                         <div className="flex-1 grid grid-cols-4 gap-2">
                           <div>
                             <input
@@ -479,7 +489,7 @@ export function ProductsPage() {
                               placeholder={t('products.color')}
                               value={variant.color}
                               onChange={(e) => updateVariant(index, 'color', e.target.value)}
-                              className="w-full px-3 py-2 border rounded text-sm"
+                              className="input text-sm"
                             />
                           </div>
                           <div>
@@ -488,7 +498,7 @@ export function ProductsPage() {
                               placeholder={t('products.size')}
                               value={variant.size}
                               onChange={(e) => updateVariant(index, 'size', e.target.value)}
-                              className="w-full px-3 py-2 border rounded text-sm"
+                              className="input text-sm"
                             />
                           </div>
                           <div>
@@ -497,7 +507,7 @@ export function ProductsPage() {
                               placeholder={t('common.price')}
                               value={variant.price}
                               onChange={(e) => updateVariant(index, 'price', e.target.value)}
-                              className="w-full px-3 py-2 border rounded text-sm"
+                              className="input text-sm"
                             />
                           </div>
                           <div>
@@ -506,7 +516,7 @@ export function ProductsPage() {
                               placeholder={t('products.sku')}
                               value={variant.variantSku}
                               onChange={(e) => updateVariant(index, 'variantSku', e.target.value)}
-                              className="w-full px-3 py-2 border rounded text-sm"
+                              className="input text-sm"
                             />
                           </div>
                         </div>
@@ -514,7 +524,8 @@ export function ProductsPage() {
                           <button
                             type="button"
                             onClick={() => saveVariant(index)}
-                            className="p-2 text-green-600 hover:bg-green-100 rounded"
+                            className="btn-ghost"
+                            style={{ color: 'var(--color-success)' }}
                             title={t('common.save')}
                           >
                             <Save size={16} />
@@ -522,7 +533,8 @@ export function ProductsPage() {
                           <button
                             type="button"
                             onClick={() => removeVariant(index)}
-                            className="p-2 text-red-600 hover:bg-red-100 rounded"
+                            className="btn-ghost"
+                            style={{ color: 'var(--color-error)' }}
                             title={t('products.delete_variant')}
                           >
                             <Trash2 size={16} />
@@ -534,14 +546,14 @@ export function ProductsPage() {
                 </div>
               )}
 
-              <div className="flex gap-3 pt-4 border-t">
-                <button type="button" onClick={closeModal} className="flex-1 py-2 px-4 border rounded-lg hover:bg-gray-50">
+              <div className="flex gap-3 pt-4 border-t" style={{ borderColor: 'var(--color-border-subtle)' }}>
+                <button type="button" onClick={closeModal} className="flex-1 btn btn-secondary">
                   {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={createMutation.isPending || updateMutation.isPending}
-                  className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  className="flex-1 btn btn-primary"
                 >
                   {createMutation.isPending || updateMutation.isPending ? t('common.loading') : t('common.save')}
                 </button>

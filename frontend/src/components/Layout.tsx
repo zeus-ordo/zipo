@@ -4,6 +4,7 @@ import { LayoutDashboard, FileText, Package, MessageSquare, Bell, Settings, LogO
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { DarkModeToggle } from './DarkModeToggle';
 
 const storeNavItems = [
   { icon: LayoutDashboard, labelKey: 'nav.dashboard', path: '/dashboard' },
@@ -73,7 +74,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
             <div>
               <h1 className="text-base font-semibold tracking-tight" style={{ color: 'var(--color-text-primary)' }}>ZIPO</h1>
-              <p className="text-xs" style={{ color: 'var(--color-text-tertiary)' }}>服飾接單系統</p>
+              <p className="text-xs" style={{ color: 'var(--color-text-tertiary)' }}>{t('system.app_description')}</p>
             </div>
           </div>
         </div>
@@ -121,6 +122,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         <div className="absolute bottom-0 left-0 right-0" style={{ borderTop: '1px solid var(--color-border-subtle)', backgroundColor: 'var(--color-surface)' }}>
           <div className="p-4">
+            <DarkModeToggle />
+          </div>
+          <div className="p-4 pt-0">
             <LanguageSwitcher />
           </div>
           <div className="p-4 pt-0">
@@ -129,7 +133,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 {userName?.charAt(0)?.toUpperCase() || 'U'}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text-primary)' }}>{userName || '使用者'}</p>
+                <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text-primary)' }}>{userName || t('common.user')}</p>
               </div>
             </div>
             <button
@@ -152,7 +156,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/20 z-30 lg:hidden backdrop-blur-sm"
+          className="fixed inset-0 z-30 lg:hidden backdrop-blur-sm"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.2)' }}
           onClick={() => setSidebarOpen(false)}
         />
       )}

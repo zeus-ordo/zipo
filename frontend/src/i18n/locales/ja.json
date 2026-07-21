@@ -32,7 +32,9 @@
     "no_data": "データなし",
     "subtotal": "小計",
     "quantity": "数量",
-    "unit_price": "単価"
+    "unit_price": "単価",
+    "dark_mode": "ダークモード",
+    "light_mode": "ライトモード"
   },
   "nav": {
     "dashboard": "ダッシュボード",
@@ -119,12 +121,55 @@
     "draft_needs_review": "確認必要",
     "draft_ready": "確認可能",
     "status_ready_to_ship": "出荷待ち",
-    "status_shipped": "出荷済み"
+    "status_shipped": "出荷済み",
+    "order_status": "注文ステータス",
+    "mark_ready_to_ship": "出荷準備完了にする",
+    "mark_shipped": "出荷済みにする",
+    "cancel_order": "注文をキャンセル",
+    "recipient_info": "受取人情報",
+    "recipient": "受取人",
+    "phone": "電話",
+    "address": "住所",
+    "payment_status": "支払いステータス",
+    "last_five_digits": "下5桁",
+    "total_amount": "合計金額",
+    "product_name": "商品名",
+    "variants": "規格",
+    "unit_price": "単価",
+    "subtotal": "小計"
   },
   "orderDrafts": {
     "title": "注文下書き",
     "no_drafts": "注文下書きはありません",
-    "new_messages": "新しいメッセージ"
+    "new_messages": "新しいメッセージ",
+    "draft_not_found": "下書きが見つかりません",
+    "order_draft": "注文下書き",
+    "unknown": "不明",
+    "product_items": "商品項目",
+    "no_product_items": "商品項目なし",
+    "fuzzy_product": "模糊商品",
+    "select_product": "商品を選択",
+    "select_product_placeholder": "商品を選択...",
+    "reason_fuzzy": "理由",
+    "llm_summary": "LLM要約",
+    "none": "なし",
+    "suggested_reply": "提案回答",
+    "recipient_and_payment_info": "受取人与え信息",
+    "customer_data_updated": "顧客情報が更新されました",
+    "parsing_customer_data_failed": "顧客情報の解析に失敗しました",
+    "apply_new_data": "新しいデータを適用",
+    "recipient_name_required": "受取人氏名 *",
+    "recipient_phone_required": "受取人電話 *",
+    "recipient_address_required": "受取人住所 *",
+    "please_select": "選択してください",
+    "updating": "更新中...",
+    "confirm_and_create_order": "確認して注文を作成",
+    "confirm_delete_draft": "この下書きを削除しますか？",
+    "delete_draft": "下書きを削除",
+    "product_updated": "商品更新済み",
+    "update_failed": "更新に失敗しました",
+    "confirm_failed": "確認に失敗しました",
+    "fill_required_fields": "受取人の氏名・電話・住所を入力してください"
   },
   "products": {
     "title": "商品管理",
@@ -157,7 +202,14 @@
     "no_conversations": "まだ会話がありません",
     "message": "メッセージ",
     "send": "送信",
-    "type_message": "メッセージを入力..."
+    "type_message": "メッセージを入力...",
+    "conversation_not_found": "会話が見つかりません",
+    "conversation_detail": "会話詳細",
+    "line_id": "LINE ID",
+    "loading": "読み込み中...",
+    "customer_message": "顧客",
+    "llm_message": "AI アシスタント",
+    "staff_message": "スタッフ"
   },
   "notifications": {
     "title": "通知設定",
@@ -218,7 +270,9 @@
     "order_limit": "注文上限",
     "channel_limit": "チャンネル上限",
     "no_subscription": "サブスクなし",
-    "per_month": "/月"
+    "per_month": "/月",
+    "deduction": "控除",
+    "balance_topup": "チャージ"
   },
   "admin": {
     "plans": {
@@ -233,7 +287,8 @@
       "active": "有効",
       "inactive": "無効",
       "default": "デフォルト",
-      "default_plan": "新規店舗用のデフォルトプラン"
+      "default_plan": "新規店舗用のデフォルトプラン",
+      "unlimited_placeholder": "0 = 無制限"
     },
     "subscriptions": {
       "title": "店舗サブスク管理",
@@ -249,6 +304,7 @@
     "network_error": "ネットワークエラー",
     "unknown_error": "不明なエラー",
     "error_occurred": "エラーが発生しました",
+    "unexpected_error": "予期しないエラーが発生しました。ページを更新してください。",
     "refresh_page": "ページを更新"
   },
   "system": {

@@ -82,53 +82,54 @@ export function LineSettingsPage() {
   return (
     <Layout>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">{t('line_settings.title')}</h1>
-        <p className="text-sm text-gray-500 mt-1">{t('line_settings.line_official_account')}</p>
+        <h1 className="page-title">{t('line_settings.title')}</h1>
+        <p className="page-subtitle">{t('line_settings.line_official_account')}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="card p-6">
             {isLoading ? (
-              <div className="text-center py-8 text-gray-500">{t('common.loading')}</div>
+              <div className="text-center py-8" style={{ color: 'var(--color-text-secondary)' }}>{t('common.loading')}</div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('line_settings.channel_id')} *</label>
+                  <label className="label">{t('line_settings.channel_id')} *</label>
                   <input
                     type="text"
                     value={formData.channelId}
                     onChange={(e) => setFormData({ ...formData, channelId: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="input"
                     placeholder="1234567890"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('line_settings.channel_secret')} *</label>
+                  <label className="label">{t('line_settings.channel_secret')} *</label>
                   <div className="relative">
                     <input
                       type={showSecret ? 'text' : 'password'}
                       value={formData.channelSecret}
                       onChange={(e) => setFormData({ ...formData, channelSecret: e.target.value })}
-                      className="w-full px-4 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      className="input pr-10"
                       placeholder={t('line_settings.channel_secret')}
                     />
                     <button
                       type="button"
                       onClick={() => setShowSecret(!showSecret)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                      style={{ color: 'var(--color-text-tertiary)' }}
                     >
                       {showSecret ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">{t('line_settings.if_not_change_leave_blank')}</p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--color-text-tertiary)' }}>{t('line_settings.if_not_change_leave_blank')}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('line_settings.channel_token')} *</label>
+                  <label className="label">{t('line_settings.channel_token')} *</label>
                   <textarea
                     value={formData.channelAccessToken}
                     onChange={(e) => setFormData({ ...formData, channelAccessToken: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="input"
                     rows={3}
                     placeholder={t('line_settings.channel_token')}
                   />
@@ -136,7 +137,7 @@ export function LineSettingsPage() {
                 <button
                   type="submit"
                   disabled={updateMutation.isPending}
-                  className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  className="btn btn-primary w-full"
                 >
                   {updateMutation.isPending ? t('line_settings.saving') : t('line_settings.save_settings')}
                 </button>
@@ -146,29 +147,30 @@ export function LineSettingsPage() {
         </div>
 
         <div>
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">{t('common.status')}</h2>
+          <div className="card p-6">
+            <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--color-text-primary)' }}>{t('common.status')}</h2>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">{t('line_settings.channel_id')}</span>
+                <span className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>{t('line_settings.channel_id')}</span>
                 {settings?.channelId ? (
-                  <span className="flex items-center gap-1 text-green-600 text-sm">
+                  <span className="flex items-center gap-1 text-sm" style={{ color: 'var(--color-success)' }}>
                     <CheckCircle size={16} />
                     {t('products.active')}
                   </span>
                 ) : (
-                  <span className="flex items-center gap-1 text-gray-400 text-sm">
+                  <span className="flex items-center gap-1 text-sm" style={{ color: 'var(--color-text-tertiary)' }}>
                     <XCircle size={16} />
                     {t('products.inactive')}
                   </span>
                 )}
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">{t('line_settings.test_webhook')}</span>
+                <span className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>{t('line_settings.test_webhook')}</span>
                 <button
                   onClick={testWebhook}
                   disabled={verifying || !settings?.channelId}
-                  className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 disabled:text-gray-400"
+                  className="btn-ghost text-sm"
+                  style={{ color: 'var(--color-accent)' }}
                 >
                   <RefreshCw size={14} className={verifying ? 'animate-spin' : ''} />
                   {verifying ? t('common.loading') : t('line_settings.test_webhook')}
@@ -177,9 +179,9 @@ export function LineSettingsPage() {
             </div>
 
             {webhookUrl && (
-              <div className="mt-4 pt-4 border-t">
-                <p className="text-sm text-gray-600 mb-2">{t('line_settings.webhook_url')}</p>
-                <code className="text-xs bg-gray-100 px-2 py-1 rounded break-all block">{webhookUrl}</code>
+              <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--color-border-subtle)' }}>
+                <p className="text-sm mb-2" style={{ color: 'var(--color-text-secondary)' }}>{t('line_settings.webhook_url')}</p>
+                <code className="text-xs px-2 py-1 rounded break-all block" style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text-primary)' }}>{webhookUrl}</code>
               </div>
             )}
           </div>

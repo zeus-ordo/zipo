@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout } from '../components/Layout';
-import { orderDraftApi, orderApi, productApi } from '../api/client';
+import { orderDraftApi, productApi } from '../api/client';
 import { formatDate } from '../utils/date';
 import { AlertTriangle, Check, Trash2, Save, User } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export function OrderDraftDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -62,10 +64,10 @@ export function OrderDraftDetailPage() {
       orderDraftApi.updateItem(id!, itemId, { matchedProductId: productId, unitPrice }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['order-draft', id] });
-      toast.success('已更新商品');
+      toast.success(t('orderDrafts.product_updated'));
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.error || '更新失敗');
+      toast.error(err.response?.data?.error || t('orderDrafts.update_failed'));
     },
   });
 
@@ -98,7 +100,7 @@ export function OrderDraftDetailPage() {
       navigate(`/orders/${res.data.id}`);
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.error || '確認失敗');
+      toast.error(err.response?.data?.error || t('orderDrafts.confirm_failed'));
     },
   });
 
@@ -112,7 +114,7 @@ export function OrderDraftDetailPage() {
 
   const handleConfirm = async () => {
     if (!formData.recipientName || !formData.recipientPhone || !formData.recipientAddress) {
-      toast.error('請填寫收件人姓名、電話、地址');
+      toast.error(t('orderDrafts.fill_required_fields'));
       return;
     }
     setConfirming(true);
@@ -143,7 +145,7 @@ export function OrderDraftDetailPage() {
   if (isLoading) {
     return (
       <Layout>
-        <div className="text-center py-12 text-gray-500">載入中...</div>
+        <div className="text-center py-12" style={{ color: 'var(--color-text-secondary)' }}>{t('common.loading')}</div>
       </Layout>
     );
   }
@@ -151,7 +153,7 @@ export function OrderDraftDetailPage() {
   if (!draft) {
     return (
       <Layout>
-        <div className="text-center py-12 text-gray-500">草稿不存在</div>
+        <div className="text-center py-12" style={{ color: 'var(--color-text-secondary)' }}>{t('orderDrafts.draft_not_found')}</div>
       </Layout>
     );
   }
@@ -159,55 +161,54 @@ export function OrderDraftDetailPage() {
   return (
     <Layout>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">訂單草稿</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          {draft.customer?.lineDisplayName || draft.customer?.name || '未知'} · {formatDate(draft.createdAt)}
+        <h1 className="page-title">{t('orderDrafts.order_draft')}</h1>
+        <p className="page-subtitle">
+          {draft.customer?.lineDisplayName || draft.customer?.name || t('orderDrafts.unknown')} · {formatDate(draft.createdAt)}
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left: Items */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">商品項目</h2>
+        <div className="card p-6">
+          <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--color-text-primary)' }}>{t('orderDrafts.product_items')}</h2>
           {draft.items?.length === 0 ? (
-            <p className="text-gray-500">無商品項目</p>
+            <p style={{ color: 'var(--color-text-secondary)' }}>{t('orderDrafts.no_product_items')}</p>
           ) : (
             <div className="space-y-4">
               {draft.items?.map((item: any) => (
-                <div key={item.id} className="border rounded-lg p-4">
+                <div key={item.id} className="border rounded-lg p-4" style={{ borderColor: 'var(--color-border-subtle)' }}>
                   {item.isFuzzy && (
-                    <div className="flex items-center gap-1 text-yellow-600 text-sm mb-2">
+                    <div className="flex items-center gap-1 text-sm mb-2" style={{ color: 'var(--color-warning)' }}>
                       <AlertTriangle size={14} />
-                      模糊商品
+                      {t('orderDrafts.fuzzy_product')}
                     </div>
                   )}
                   <div className="grid grid-cols-1 gap-2 text-sm">
                     <div>
-                      <span className="text-gray-500">商品名稱</span>
-                      <p className="font-medium">{item.name || item.rawText}</p>
+                      <span style={{ color: 'var(--color-text-secondary)' }}>{t('orders.product_name')}</span>
+                      <p className="font-medium" style={{ color: 'var(--color-text-primary)' }}>{item.name || item.rawText}</p>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <span className="text-gray-500">顏色/尺寸</span>
-                        <p className="font-medium">{item.color || '-'} / {item.size || '-'}</p>
+                        <span style={{ color: 'var(--color-text-secondary)' }}>{t('orders.variants')}</span>
+                        <p className="font-medium" style={{ color: 'var(--color-text-primary)' }}>{item.color || '-'} / {item.size || '-'}</p>
                       </div>
                       <div>
-                        <span className="text-gray-500">數量</span>
-                        <p className="font-medium">{item.quantity || '-'}</p>
+                        <span style={{ color: 'var(--color-text-secondary)' }}>{t('common.quantity')}</span>
+                        <p className="font-medium" style={{ color: 'var(--color-text-primary)' }}>{item.quantity || '-'}</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-3 pt-3 border-t">
+                  <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--color-border-subtle)' }}>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="block text-xs text-gray-500 mb-1">選擇商品</label>
+                        <label className="block text-xs mb-1" style={{ color: 'var(--color-text-secondary)' }}>{t('orderDrafts.select_product')}</label>
                         <select
                           value={itemProducts[item.id] || ''}
                           onChange={(e) => handleProductChange(item.id, e.target.value)}
-                          className="w-full px-2 py-1 border rounded text-sm"
+                          className="input text-sm"
                         >
-                          <option value="">選擇商品...</option>
+                          <option value="">{t('orderDrafts.select_product_placeholder')}</option>
                           {products.map((product: any) => (
                             <option key={product.id} value={product.id}>
                               {product.name} (${product.basePrice || '-'})
@@ -216,18 +217,18 @@ export function OrderDraftDetailPage() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-500 mb-1">單價</label>
+                        <label className="block text-xs mb-1" style={{ color: 'var(--color-text-secondary)' }}>{t('orders.unit_price')}</label>
                         <div className="flex gap-1">
                           <input
                             type="number"
                             value={itemPrices[item.id] || ''}
                             onChange={(e) => handlePriceChange(item.id, parseInt(e.target.value) || 0)}
-                            className="w-full px-2 py-1 border rounded text-sm"
+                            className="input text-sm"
                             placeholder="0"
                           />
                           <button
                             onClick={() => handleSaveItem(item.id)}
-                            className="px-2 py-1 bg-blue-100 text-blue-600 rounded text-sm hover:bg-blue-200"
+                            className="btn btn-secondary text-sm"
                           >
                             <Save size={14} />
                           </button>
@@ -237,44 +238,43 @@ export function OrderDraftDetailPage() {
                   </div>
 
                   {item.fuzzyReason && (
-                    <p className="text-xs text-gray-500 mt-2">原因: {item.fuzzyReason}</p>
+                    <p className="text-xs mt-2" style={{ color: 'var(--color-text-secondary)' }}>{t('orderDrafts.reason_fuzzy')}: {item.fuzzyReason}</p>
                   )}
                 </div>
               ))}
             </div>
           )}
 
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <h3 className="font-medium text-gray-800 mb-2">LLM 摘要</h3>
-            <p className="text-sm text-gray-600">{draft.summaryForStaff || '無'}</p>
+          <div className="mt-6 p-4 rounded-lg" style={{ backgroundColor: 'var(--color-bg)' }}>
+            <h3 className="font-medium mb-2" style={{ color: 'var(--color-text-primary)' }}>{t('orderDrafts.llm_summary')}</h3>
+            <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>{draft.summaryForStaff || t('orderDrafts.none')}</p>
             {draft.replySuggestion && (
               <>
-                <h3 className="font-medium text-gray-800 mt-4 mb-2">建議回覆</h3>
-                <p className="text-sm text-gray-600">{draft.replySuggestion}</p>
+                <h3 className="font-medium mt-4 mb-2" style={{ color: 'var(--color-text-primary)' }}>{t('orderDrafts.suggested_reply')}</h3>
+                <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>{draft.replySuggestion}</p>
               </>
             )}
           </div>
         </div>
 
-        {/* Right: Form */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">收件與付款資訊</h2>
+        <div className="card p-6">
+          <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--color-text-primary)' }}>{t('orderDrafts.recipient_and_payment_info')}</h2>
 
           {draft.customer?.pendingInfoUpdate && (
-            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="mb-4 p-3 rounded-lg" style={{ backgroundColor: 'rgba(255, 149, 0, 0.1)', border: '1px solid rgba(255, 149, 0, 0.2)' }}>
               <div className="flex items-start gap-2">
-                <User className="text-yellow-600 mt-0.5" size={18} />
+                <User style={{ color: 'var(--color-warning)' }} className="mt-0.5" size={18} />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-yellow-800">客戶資料已更新</p>
-                  <div className="mt-2 text-xs text-yellow-700 space-y-1">
+                  <p className="text-sm font-medium" style={{ color: 'var(--color-warning)' }}>{t('orderDrafts.customer_data_updated')}</p>
+                  <div className="mt-2 text-xs space-y-1" style={{ color: 'var(--color-warning)' }}>
                     {(() => {
                       try {
                         const pending = JSON.parse(draft.customer.pendingInfoUpdate);
                         return (
                           <>
-                            {pending.name && <p>姓名: {pending.name}</p>}
-                            {pending.phone && <p>電話: {pending.phone}</p>}
-                            {pending.address && <p>地址: {pending.address}</p>}
+                            {pending.name && <p>{t('orders.recipient_name')}: {pending.name}</p>}
+                            {pending.phone && <p>{t('orders.phone')}: {pending.phone}</p>}
+                            {pending.address && <p>{t('orders.address')}: {pending.address}</p>}
                           </>
                         );
                       } catch {
@@ -292,14 +292,15 @@ export function OrderDraftDetailPage() {
                           recipientPhone: pending.phone || prev.recipientPhone,
                           recipientAddress: pending.address || prev.recipientAddress,
                         }));
-                        toast.success('已套用新客戶資料');
+                        toast.success(t('orderDrafts.apply_new_data'));
                       } catch {
-                        toast.error('解析客戶資料失敗');
+                        toast.error(t('orderDrafts.parsing_customer_data_failed'));
                       }
                     }}
-                    className="mt-2 px-3 py-1 bg-yellow-200 text-yellow-800 text-xs rounded hover:bg-yellow-300"
+                    className="mt-2 px-3 py-1 text-xs rounded"
+                    style={{ backgroundColor: 'rgba(255, 149, 0, 0.2)', color: 'var(--color-warning)' }}
                   >
-                    套用新資料
+                    {t('orderDrafts.apply_new_data')}
                   </button>
                 </div>
               </div>
@@ -308,55 +309,55 @@ export function OrderDraftDetailPage() {
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">收件人姓名 *</label>
+              <label className="label">{t('orderDrafts.recipient_name_required')}</label>
               <input
                 type="text"
                 value={formData.recipientName}
                 onChange={(e) => setFormData({ ...formData, recipientName: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="input"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">收件人電話 *</label>
+              <label className="label">{t('orderDrafts.recipient_phone_required')}</label>
               <input
                 type="text"
                 value={formData.recipientPhone}
                 onChange={(e) => setFormData({ ...formData, recipientPhone: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="input"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">收件地址 *</label>
+              <label className="label">{t('orderDrafts.recipient_address_required')}</label>
               <input
                 type="text"
                 value={formData.recipientAddress}
                 onChange={(e) => setFormData({ ...formData, recipientAddress: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="input"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">配送方式</label>
+              <label className="label">{t('orders.delivery_method')}</label>
               <select
                 value={formData.deliveryMethod}
                 onChange={(e) => setFormData({ ...formData, deliveryMethod: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="input"
               >
-                <option value="">請選擇</option>
-                <option value="home_delivery">宅配</option>
-                <option value="store_pickup">超商取貨</option>
-                <option value="meet_up">面交</option>
+                <option value="">{t('orderDrafts.please_select')}</option>
+                <option value="home_delivery">{t('orders.home_delivery')}</option>
+                <option value="store_pickup">{t('orders.store_pickup')}</option>
+                <option value="meet_up">{t('orders.meet_up')}</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">付款方式</label>
+              <label className="label">{t('orders.payment_method')}</label>
               <select
                 value={formData.paymentMethod}
                 onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="input"
               >
-                <option value="">請選擇</option>
-                <option value="bank_transfer">匯款</option>
-                <option value="cash_on_delivery">貨到付款</option>
+                <option value="">{t('orderDrafts.please_select')}</option>
+                <option value="bank_transfer">{t('orders.transfer')}</option>
+                <option value="cash_on_delivery">{t('orders.cash_on_delivery')}</option>
                 <option value="line_pay">LINE Pay</option>
               </select>
             </div>
@@ -366,22 +367,24 @@ export function OrderDraftDetailPage() {
             <button
               onClick={handleConfirm}
               disabled={confirmMutation.isPending || confirming}
-              className="w-full py-3 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full btn text-white"
+              style={{ backgroundColor: 'var(--color-success)' }}
             >
               <Check size={20} />
-              {confirming ? '更新中...' : '確認並建立訂單'}
+              {confirming ? t('orderDrafts.updating') : t('orderDrafts.confirm_and_create_order')}
             </button>
             <button
               onClick={() => {
-                if (confirm('確定要刪除這個草稿嗎？')) {
+                if (window.confirm(t('orderDrafts.confirm_delete_draft'))) {
                   deleteMutation.mutate();
                 }
               }}
               disabled={deleteMutation.isPending}
-              className="w-full py-3 px-4 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full btn"
+              style={{ backgroundColor: 'rgba(255, 59, 48, 0.1)', color: 'var(--color-error)' }}
             >
               <Trash2 size={20} />
-              刪除草稿
+              {t('orderDrafts.delete_draft')}
             </button>
           </div>
         </div>

@@ -18,52 +18,52 @@ export function ConversationsPage() {
   return (
     <Layout>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">{t('conversations.title')}</h1>
+        <h1 className="page-title">{t('conversations.title')}</h1>
       </div>
 
       {isLoading ? (
-        <div className="text-center py-12 text-gray-500">{t('common.loading')}</div>
+        <div className="text-center py-12" style={{ color: 'var(--color-text-secondary)' }}>{t('common.loading')}</div>
       ) : conversations.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm p-12 text-center">
-          <MessageSquare size={48} className="mx-auto text-gray-300 mb-4" />
-          <p className="text-gray-500">{t('conversations.no_conversations')}</p>
+        <div className="card p-12 text-center">
+          <MessageSquare size={48} className="mx-auto mb-4" style={{ color: 'var(--color-text-tertiary)' }} />
+          <p style={{ color: 'var(--color-text-secondary)' }}>{t('conversations.no_conversations')}</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50">
+        <div className="table-container">
+          <table className="table">
+            <thead>
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('conversations.customer')}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('conversations.last_message')}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('dashboard.message_count')}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('common.date')}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"></th>
+                <th>{t('conversations.customer')}</th>
+                <th>{t('conversations.last_message')}</th>
+                <th>{t('dashboard.message_count')}</th>
+                <th>{t('common.date')}</th>
+                <th></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody>
               {conversations.map((conv) => (
-                <tr key={conv.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <p className="font-medium text-gray-800">
+                <tr key={conv.id}>
+                  <td>
+                    <p className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
                       {conv.customer?.lineDisplayName || '-'}
                     </p>
-                    <p className="text-sm text-gray-500">{conv.customer?.lineUserId}</p>
+                    <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>{conv.customer?.lineUserId}</p>
                   </td>
-                  <td className="px-6 py-4">
-                    <p className="text-gray-600 line-clamp-1">
+                  <td>
+                    <p className="line-clamp-1" style={{ color: 'var(--color-text-secondary)' }}>
                       {conv.lastMessage?.content || '-'}
                     </p>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                  <td style={{ color: 'var(--color-text-secondary)' }}>
                     {conv.messageCount || 0}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td style={{ color: 'var(--color-text-tertiary)' }}>
                     {formatDistanceToNow(conv.updatedAt)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td>
                     <Link
                       to={`/conversations/${conv.id}`}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                      className="btn-ghost text-sm"
                     >
                       {t('common.view')}
                     </Link>

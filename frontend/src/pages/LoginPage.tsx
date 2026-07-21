@@ -34,11 +34,11 @@ export function LoginPage() {
     <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--color-bg)' }}>
       <div className="w-full max-w-[400px] p-10" style={{ backgroundColor: 'var(--color-surface)', borderRadius: '20px', boxShadow: 'var(--shadow-elevated)' }}>
         <div className="text-center mb-10">
-          <div className="w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center" style={{ backgroundColor: 'var(--color-text-primary)' }}>
+          <div className="w-14 h-14 rounded-xl mx-auto mb-5 flex items-center justify-center" style={{ backgroundColor: 'var(--color-text-primary)' }}>
             <span className="text-white text-xl font-semibold">Z</span>
           </div>
           <h1 className="text-2xl font-semibold tracking-tight mb-2" style={{ color: 'var(--color-text-primary)' }}>ZIPO</h1>
-          <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>服飾業 LINE 接單客服系統</p>
+          <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>{t('auth.system_description')}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -72,7 +72,8 @@ export function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2"
+                style={{ color: 'var(--color-text-tertiary)' }}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>

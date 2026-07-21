@@ -50,57 +50,59 @@ export default function SubscriptionsPage() {
     }
   };
 
-  if (loading) return <div className="p-8">{t('common.loading')}</div>;
+  if (loading) return <Layout><div className="p-8 text-center">{t('common.loading')}</div></Layout>;
 
   return (
     <Layout>
       <div className="p-8">
-        <h1 className="text-2xl font-bold mb-6">{t('admin.subscriptions.title')}</h1>
+        <h1 className="page-title mb-6">{t('admin.subscriptions.title')}</h1>
 
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full">
-            <thead className="bg-gray-50">
+        <div className="table-container">
+          <table className="table">
+            <thead>
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.subscriptions.tenant')}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.subscriptions.plan')}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.subscriptions.expires')}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('common.actions')}</th>
+                <th>{t('admin.subscriptions.tenant')}</th>
+                <th>{t('admin.subscriptions.plan')}</th>
+                <th>{t('common.status')}</th>
+                <th>{t('admin.subscriptions.expires')}</th>
+                <th>{t('common.actions')}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody>
               {subscriptions.map((sub) => (
               <tr key={sub.id}>
-                <td className="px-6 py-4">
+                <td style={{ color: 'var(--color-text-primary)' }}>
                   <div className="font-medium">{sub.tenant?.name || 'N/A'}</div>
                 </td>
-                  <td className="px-6 py-4">{sub.plan?.name || t('billing.no_subscription')}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded text-xs ${
-                      sub.status === 'active' ? 'bg-green-100 text-green-800' :
-                      sub.status === 'expired' ? 'bg-red-100 text-red-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {sub.status === 'active' ? t('billing.status_active') :
-                       sub.status === 'expired' ? t('billing.status_expired') :
-                       sub.status === 'suspended' ? t('billing.status_suspended') :
-                       sub.status === 'cancelled' ? t('billing.status_cancelled') : sub.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">{new Date(sub.expiresAt).toLocaleDateString()}</td>
-                  <td className="px-6 py-4">
-                    <select
-                      value={sub.status}
-                      onChange={(e) => updateStatus(sub.tenantId, e.target.value)}
-                      className="border rounded px-2 py-1 text-sm"
-                    >
-                      <option value="active">{t('billing.status_active')}</option>
-                      <option value="suspended">{t('billing.status_suspended')}</option>
-                      <option value="cancelled">{t('billing.status_cancelled')}</option>
-                      <option value="expired">{t('billing.status_expired')}</option>
-                    </select>
-                  </td>
-                </tr>
+                <td style={{ color: 'var(--color-text-secondary)' }}>{sub.plan?.name || t('billing.no_subscription')}</td>
+                <td>
+                  <span className="badge" style={{
+                    backgroundColor: sub.status === 'active' ? 'rgba(52, 199, 89, 0.15)' :
+                      sub.status === 'expired' ? 'rgba(255, 59, 48, 0.15)' : 'var(--color-bg)',
+                    color: sub.status === 'active' ? 'var(--color-success)' :
+                      sub.status === 'expired' ? 'var(--color-error)' : 'var(--color-text-secondary)'
+                  }}>
+                    {sub.status === 'active' ? t('billing.status_active') :
+                     sub.status === 'expired' ? t('billing.status_expired') :
+                     sub.status === 'suspended' ? t('billing.status_suspended') :
+                     sub.status === 'cancelled' ? t('billing.status_cancelled') : sub.status}
+                  </span>
+                </td>
+                <td style={{ color: 'var(--color-text-secondary)' }}>{new Date(sub.expiresAt).toLocaleDateString()}</td>
+                <td>
+                  <select
+                    value={sub.status}
+                    onChange={(e) => updateStatus(sub.tenantId, e.target.value)}
+                    className="input text-sm"
+                    style={{ width: 'auto' }}
+                  >
+                    <option value="active">{t('billing.status_active')}</option>
+                    <option value="suspended">{t('billing.status_suspended')}</option>
+                    <option value="cancelled">{t('billing.status_cancelled')}</option>
+                    <option value="expired">{t('billing.status_expired')}</option>
+                  </select>
+                </td>
+              </tr>
               ))}
             </tbody>
           </table>

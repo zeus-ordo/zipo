@@ -32,7 +32,9 @@
     "no_data": "No Data",
     "subtotal": "Subtotal",
     "quantity": "Quantity",
-    "unit_price": "Unit Price"
+    "unit_price": "Unit Price",
+    "dark_mode": "Dark Mode",
+    "light_mode": "Light Mode"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -119,12 +121,55 @@
     "draft_needs_review": "Needs Review",
     "draft_ready": "Ready to Confirm",
     "status_ready_to_ship": "Ready to Ship",
-    "status_shipped": "Shipped"
+    "status_shipped": "Shipped",
+    "order_status": "Order Status",
+    "mark_ready_to_ship": "Mark as Ready to Ship",
+    "mark_shipped": "Mark as Shipped",
+    "cancel_order": "Cancel Order",
+    "recipient_info": "Recipient Info",
+    "recipient": "Recipient",
+    "phone": "Phone",
+    "address": "Address",
+    "payment_status": "Payment Status",
+    "last_five_digits": "Last 5 Digits",
+    "total_amount": "Total Amount",
+    "product_name": "Product Name",
+    "variants": "Variants",
+    "unit_price": "Unit Price",
+    "subtotal": "Subtotal"
   },
   "orderDrafts": {
     "title": "Order Drafts",
     "no_drafts": "No order drafts",
-    "new_messages": "New Messages"
+    "new_messages": "New Messages",
+    "draft_not_found": "Draft not found",
+    "order_draft": "Order Draft",
+    "unknown": "Unknown",
+    "product_items": "Product Items",
+    "no_product_items": "No product items",
+    "fuzzy_product": "Fuzzy Product",
+    "select_product": "Select Product",
+    "select_product_placeholder": "Select product...",
+    "reason_fuzzy": "Reason",
+    "llm_summary": "LLM Summary",
+    "none": "None",
+    "suggested_reply": "Suggested Reply",
+    "recipient_and_payment_info": "Recipient & Payment Info",
+    "customer_data_updated": "Customer data updated",
+    "parsing_customer_data_failed": "Failed to parse customer data",
+    "apply_new_data": "Apply New Data",
+    "recipient_name_required": "Recipient Name *",
+    "recipient_phone_required": "Recipient Phone *",
+    "recipient_address_required": "Recipient Address *",
+    "please_select": "Please select",
+    "updating": "Updating...",
+    "confirm_and_create_order": "Confirm & Create Order",
+    "confirm_delete_draft": "Delete this draft?",
+    "delete_draft": "Delete Draft",
+    "product_updated": "Product updated",
+    "update_failed": "Update failed",
+    "confirm_failed": "Confirm failed",
+    "fill_required_fields": "Please fill in recipient name, phone, and address"
   },
   "products": {
     "title": "Products",
@@ -157,7 +202,14 @@
     "no_conversations": "No conversations yet",
     "message": "Message",
     "send": "Send",
-    "type_message": "Type a message..."
+    "type_message": "Type a message...",
+    "conversation_not_found": "Conversation not found",
+    "conversation_detail": "Conversation Detail",
+    "line_id": "LINE ID",
+    "loading": "Loading...",
+    "customer_message": "Customer",
+    "llm_message": "AI Assistant",
+    "staff_message": "Staff"
   },
   "notifications": {
     "title": "Notifications",
@@ -196,7 +248,7 @@
     "title": "Billing & Subscription",
     "current_plan": "Current Plan",
     "plan_name": "Plan Name",
-    "price_per_month": "Price",
+    "price_per_month": "Price/mo",
     "expires": "Expires",
     "status_active": "Active",
     "status_expired": "Expired",
@@ -218,7 +270,9 @@
     "order_limit": "Order Limit",
     "channel_limit": "Channel Limit",
     "no_subscription": "No Subscription",
-    "per_month": "/mo"
+    "per_month": "/mo",
+    "deduction": "Deduction",
+    "balance_topup": "Balance Topup"
   },
   "admin": {
     "plans": {
@@ -233,7 +287,8 @@
       "active": "Active",
       "inactive": "Inactive",
       "default": "Default",
-      "default_plan": "Default plan for new tenants"
+      "default_plan": "Default plan for new tenants",
+      "unlimited_placeholder": "0 = Unlimited"
     },
     "subscriptions": {
       "title": "Tenant Subscriptions",
@@ -249,6 +304,7 @@
     "network_error": "Network error",
     "unknown_error": "Unknown error",
     "error_occurred": "An error occurred",
+    "unexpected_error": "An unexpected error occurred. Please refresh the page.",
     "refresh_page": "Refresh page"
   },
   "system": {

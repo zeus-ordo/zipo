@@ -32,7 +32,9 @@
     "no_data": "無資料",
     "subtotal": "小計",
     "quantity": "數量",
-    "unit_price": "單價"
+    "unit_price": "單價",
+    "dark_mode": "深色模式",
+    "light_mode": "淺色模式"
   },
   "nav": {
     "dashboard": "儀表板",
@@ -119,12 +121,55 @@
     "draft_needs_review": "待確認",
     "draft_ready": "可確認",
     "status_ready_to_ship": "待出貨",
-    "status_shipped": "已出貨"
+    "status_shipped": "已出貨",
+    "order_status": "訂單狀態",
+    "mark_ready_to_ship": "標記為待出貨",
+    "mark_shipped": "標記為已出貨",
+    "cancel_order": "取消訂單",
+    "recipient_info": "收件資訊",
+    "recipient": "收件人",
+    "phone": "電話",
+    "address": "地址",
+    "payment_status": "付款狀態",
+    "last_five_digits": "後五碼",
+    "total_amount": "總金額",
+    "product_name": "商品名稱",
+    "variants": "規格",
+    "unit_price": "單價",
+    "subtotal": "小計"
   },
   "orderDrafts": {
     "title": "訂單草稿",
     "no_drafts": "目前沒有訂單草稿",
-    "new_messages": "新對話"
+    "new_messages": "新對話",
+    "draft_not_found": "草稿不存在",
+    "order_draft": "訂單草稿",
+    "unknown": "未知",
+    "product_items": "商品項目",
+    "no_product_items": "無商品項目",
+    "fuzzy_product": "模糊商品",
+    "select_product": "選擇商品",
+    "select_product_placeholder": "選擇商品...",
+    "reason_fuzzy": "原因",
+    "llm_summary": "LLM 摘要",
+    "none": "無",
+    "suggested_reply": "建議回覆",
+    "recipient_and_payment_info": "收件與付款資訊",
+    "customer_data_updated": "客戶資料已更新",
+    "parsing_customer_data_failed": "解析客戶資料失敗",
+    "apply_new_data": "套用新資料",
+    "recipient_name_required": "收件人姓名 *",
+    "recipient_phone_required": "收件人電話 *",
+    "recipient_address_required": "收件地址 *",
+    "please_select": "請選擇",
+    "updating": "更新中...",
+    "confirm_and_create_order": "確認並建立訂單",
+    "confirm_delete_draft": "確定要刪除這個草稿嗎？",
+    "delete_draft": "刪除草稿",
+    "product_updated": "已更新商品",
+    "update_failed": "更新失敗",
+    "confirm_failed": "確認失敗",
+    "fill_required_fields": "請填寫收件人姓名、電話、地址"
   },
   "products": {
     "title": "商品管理",
@@ -157,7 +202,14 @@
     "no_conversations": "尚無對話紀錄",
     "message": "訊息",
     "send": "傳送",
-    "type_message": "輸入訊息..."
+    "type_message": "輸入訊息...",
+    "conversation_not_found": "對話不存在",
+    "conversation_detail": "對話詳情",
+    "line_id": "LINE ID",
+    "loading": "載入中...",
+    "customer_message": "客戶",
+    "llm_message": "AI 助理",
+    "staff_message": "員工"
   },
   "notifications": {
     "title": "通知設定",
@@ -196,7 +248,7 @@
     "title": "帳務訂閱",
     "current_plan": "目前方案",
     "plan_name": "方案名稱",
-    "price_per_month": "單價",
+    "price_per_month": "單價/月",
     "expires": "到期日",
     "status_active": "有效",
     "status_expired": "已過期",
@@ -218,7 +270,9 @@
     "order_limit": "訂單上限",
     "channel_limit": "頻道數上限",
     "no_subscription": "無訂閱",
-    "per_month": "/月"
+    "per_month": "/月",
+    "deduction": "扣款",
+    "balance_topup": "儲值"
   },
   "admin": {
     "plans": {
@@ -233,7 +287,8 @@
       "active": "啟用",
       "inactive": "停用",
       "default": "預設",
-      "default_plan": "新店家預設方案"
+      "default_plan": "新店家預設方案",
+      "unlimited_placeholder": "0 = 無上限"
     },
     "subscriptions": {
       "title": "店家訂閱管理",
@@ -249,6 +304,7 @@
     "network_error": "網路錯誤",
     "unknown_error": "未知錯誤",
     "error_occurred": "發生錯誤",
+    "unexpected_error": "未預期的錯誤發生，請重新整理頁面",
     "refresh_page": "重新整理"
   },
   "system": {
