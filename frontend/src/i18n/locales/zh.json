@@ -26,7 +26,13 @@
     "none": "無",
     "current": "目前",
     "previous": "上一頁",
-    "next_page": "下一頁"
+    "next_page": "下一頁",
+    "user": "使用者",
+    "view": "查看",
+    "no_data": "無資料",
+    "subtotal": "小計",
+    "quantity": "數量",
+    "unit_price": "單價"
   },
   "nav": {
     "dashboard": "儀表板",
@@ -56,7 +62,8 @@
     "no_account": "還沒有帳號？",
     "has_account": "已有帳號？",
     "login_success": "登入成功",
-    "logout_success": "登出成功"
+    "logout_success": "登出成功",
+    "system_description": "服飾業 LINE 接單客服系統"
   },
   "register": {
     "create_account": "註冊 ZIPO",
@@ -75,7 +82,8 @@
     "month_orders": "本月訂單",
     "total_customers": "客戶總數",
     "pending_orders": "待處理訂單",
-    "recent_orders": "最近訂單"
+    "recent_orders": "最近訂單",
+    "message_count": "訊息數"
   },
   "orders": {
     "title": "訂單",
@@ -94,7 +102,24 @@
     "order_items": "訂單項目",
     "confirm_order": "確認訂單",
     "edit_order": "編輯訂單",
-    "delete_order": "刪除訂單"
+    "delete_order": "刪除訂單",
+    "order_detail": "訂單詳情",
+    "no_orders": "尚無訂單",
+    "no_drafts": "目前沒有訂單草稿",
+    "customer_info": "客戶資訊",
+    "delivery_info": "配送資訊",
+    "payment_info": "付款資訊",
+    "home_delivery": "宅配",
+    "store_pickup": "超商取貨",
+    "credit_card": "信用卡",
+    "cash_on_delivery": "貨到付款",
+    "transfer": "轉帳",
+    "cod": "取貨付款"
+  },
+  "orderDrafts": {
+    "title": "訂單草稿",
+    "no_drafts": "目前沒有訂單草稿",
+    "new_messages": "新對話"
   },
   "products": {
     "title": "商品管理",
@@ -106,19 +131,37 @@
     "stock": "庫存",
     "variants": "規格",
     "import_excel": "匯入 Excel",
-    "export": "匯出"
+    "export": "匯出",
+    "active": "啟用",
+    "inactive": "停用",
+    "all_products": "所有商品",
+    "no_products": "尚無商品",
+    "sku": "SKU",
+    "color": "顏色",
+    "size": "尺寸",
+    "add_variant": "新增規格",
+    "delete_variant": "刪除規格",
+    "delete_product": "刪除商品",
+    "confirm_delete": "確認刪除這個商品？"
   },
   "conversations": {
     "title": "對話紀錄",
     "customer": "客戶",
     "last_message": "最後訊息",
-    "no_conversations": "尚無對話紀錄"
+    "no_conversations": "尚無對話紀錄",
+    "message": "訊息",
+    "send": "傳送",
+    "type_message": "輸入訊息..."
   },
   "notifications": {
     "title": "通知設定",
     "add_target": "新增通知對象",
     "line_user": "LINE 用戶",
-    "email_notification": "Email 通知"
+    "email_notification": "Email 通知",
+    "notification_target": "通知對象",
+    "no_targets": "尚無通知對象",
+    "target_name": "名稱",
+    "delete_target": "刪除對象"
   },
   "line_settings": {
     "title": "LINE 設定",
@@ -130,7 +173,9 @@
     "save_settings": "儲存設定",
     "saving": "儲存中...",
     "test_success": "測試成功",
-    "test_failed": "測試失敗"
+    "test_failed": "測試失敗",
+    "line_official_account": "LINE 官方帳號",
+    "if_not_change_leave_blank": "若不修改請留空"
   },
   "store_settings": {
     "title": "商店設定",
@@ -138,7 +183,8 @@
     "payment_methods": "付款方式",
     "delivery_methods": "配送方式",
     "greeting": "客戶問候語",
-    "order_template": "訂單確認範本"
+    "order_template": "訂單確認範本",
+    "settings_saved": "設定已儲存"
   },
   "billing": {
     "title": "帳務訂閱",
@@ -165,7 +211,8 @@
     "pay_with_ecpay": "使用 ECPay 支付",
     "order_limit": "訂單上限",
     "channel_limit": "頻道數上限",
-    "no_subscription": "無訂閱"
+    "no_subscription": "無訂閱",
+    "per_month": "/月"
   },
   "admin": {
     "plans": {
@@ -194,6 +241,12 @@
     "invalid_email": "無效的信箱格式",
     "password_too_short": "密碼長度需至少 8 個字元",
     "network_error": "網路錯誤",
-    "unknown_error": "未知錯誤"
+    "unknown_error": "未知錯誤",
+    "error_occurred": "發生錯誤",
+    "refresh_page": "重新整理"
+  },
+  "system": {
+    "app_name": "ZIPO",
+    "app_description": "服飾接單系統"
   }
 }

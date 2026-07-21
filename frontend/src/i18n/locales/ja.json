@@ -26,7 +26,13 @@
     "none": "なし",
     "current": "現在",
     "previous": "前へ",
-    "next_page": "次へ"
+    "next_page": "次へ",
+    "user": "ユーザー",
+    "view": "表示",
+    "no_data": "データなし",
+    "subtotal": "小計",
+    "quantity": "数量",
+    "unit_price": "単価"
   },
   "nav": {
     "dashboard": "ダッシュボード",
@@ -56,7 +62,8 @@
     "no_account": "アカウントをお持ちでないですか？",
     "has_account": "すでにアカウントをお持ちですか？",
     "login_success": "ログインしました",
-    "logout_success": "ログアウトしました"
+    "logout_success": "ログアウトしました",
+    "system_description": "アパレル LINE 受注システム"
   },
   "register": {
     "create_account": "ZIPO に登録",
@@ -75,7 +82,8 @@
     "month_orders": "今月の注文",
     "total_customers": "顧客総数",
     "pending_orders": "未処理の注文",
-    "recent_orders": "最近の注文"
+    "recent_orders": "最近の注文",
+    "message_count": "メッセージ数"
   },
   "orders": {
     "title": "注文",
@@ -94,7 +102,24 @@
     "order_items": "注文項目",
     "confirm_order": "注文を確認",
     "edit_order": "注文を編集",
-    "delete_order": "注文を削除"
+    "delete_order": "注文を削除",
+    "order_detail": "注文詳細",
+    "no_orders": "注文がありません",
+    "no_drafts": "注文下書きはありません",
+    "customer_info": "顧客情報",
+    "delivery_info": "配送情報",
+    "payment_info": "支払い情報",
+    "home_delivery": "宅配",
+    "store_pickup": "店舗受取",
+    "credit_card": "クレジットカード",
+    "cash_on_delivery": "代引",
+    "transfer": "銀行振込",
+    "cod": "代引き"
+  },
+  "orderDrafts": {
+    "title": "注文下書き",
+    "no_drafts": "注文下書きはありません",
+    "new_messages": "新しいメッセージ"
   },
   "products": {
     "title": "商品管理",
@@ -106,19 +131,37 @@
     "stock": "在庫",
     "variants": "規格",
     "import_excel": "Excel インポート",
-    "export": "エクスポート"
+    "export": "エクスポート",
+    "active": "有効",
+    "inactive": "無効",
+    "all_products": "すべての商品",
+    "no_products": "商品がありません",
+    "sku": "SKU",
+    "color": "カラー",
+    "size": "サイズ",
+    "add_variant": "規格を追加",
+    "delete_variant": "規格を削除",
+    "delete_product": "商品を削除",
+    "confirm_delete": "この商品を削除しますか？"
   },
   "conversations": {
     "title": "会話履歴",
     "customer": "顧客",
     "last_message": "最後のメッセージ",
-    "no_conversations": "まだ会話がありません"
+    "no_conversations": "まだ会話がありません",
+    "message": "メッセージ",
+    "send": "送信",
+    "type_message": "メッセージを入力..."
   },
   "notifications": {
     "title": "通知設定",
     "add_target": "通知先を追加",
     "line_user": "LINE ユーザー",
-    "email_notification": "メール通知"
+    "email_notification": "メール通知",
+    "notification_target": "通知先",
+    "no_targets": "通知先がありません",
+    "target_name": "名前",
+    "delete_target": "通知先を削除"
   },
   "line_settings": {
     "title": "LINE 設定",
@@ -130,7 +173,9 @@
     "save_settings": "設定を保存",
     "saving": "保存中...",
     "test_success": "テスト成功",
-    "test_failed": "テスト失敗"
+    "test_failed": "テスト失敗",
+    "line_official_account": "LINE 公式アカウント",
+    "if_not_change_leave_blank": "変更しない場合は空欄"
   },
   "store_settings": {
     "title": "ストア設定",
@@ -138,7 +183,8 @@
     "payment_methods": "支払い方法",
     "delivery_methods": "配送方法",
     "greeting": "顧客への挨拶",
-    "order_template": "注文確認テンプレート"
+    "order_template": "注文確認テンプレート",
+    "settings_saved": "設定が保存されました"
   },
   "billing": {
     "title": "請求・サブスクリプション",
@@ -165,7 +211,8 @@
     "pay_with_ecpay": "ECPay で支払う",
     "order_limit": "注文上限",
     "channel_limit": "チャンネル上限",
-    "no_subscription": "サブスクなし"
+    "no_subscription": "サブスクなし",
+    "per_month": "/月"
   },
   "admin": {
     "plans": {
@@ -194,6 +241,12 @@
     "invalid_email": "無効なメール形式です",
     "password_too_short": "パスワードは8文字以上必要です",
     "network_error": "ネットワークエラー",
-    "unknown_error": "不明なエラー"
+    "unknown_error": "不明なエラー",
+    "error_occurred": "エラーが発生しました",
+    "refresh_page": "ページを更新"
+  },
+  "system": {
+    "app_name": "ZIPO",
+    "app_description": "ア�ード受注明細"
   }
 }

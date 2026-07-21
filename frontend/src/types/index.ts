@@ -183,3 +183,47 @@ export interface PaginatedResponse<T> {
   data: T[];
   pagination: Pagination;
 }
+
+export interface Plan {
+  id: string;
+  name: string;
+  price: number;
+  orderLimit: number | null;
+  channelLimit: number | null;
+  isActive: boolean;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Subscription {
+  id: string;
+  tenantId: string;
+  planId: string;
+  plan?: Plan;
+  status: 'active' | 'expired' | 'suspended' | 'cancelled';
+  startedAt: string;
+  expiresAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BalanceTransaction {
+  id: string;
+  tenantId: string;
+  type: 'topup' | 'deduct';
+  amount: number;
+  balanceAfter: number;
+  description: string | null;
+  createdAt: string;
+}
+
+export interface Balance {
+  tenantId: string;
+  balance: number;
+  currency: string;
+}
+
+export interface TenantWithSubscription extends Tenant {
+  subscription?: Subscription;
+}

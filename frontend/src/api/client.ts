@@ -11,6 +11,11 @@ import type {
   PaginatedResponse,
   Message,
   ProductVariant,
+  Plan,
+  Subscription,
+  Balance,
+  BalanceTransaction,
+  TenantWithSubscription,
 } from '../types';
 
 const api = axios.create({
@@ -158,29 +163,40 @@ export const storeSettingsApi = {
 
 // Plans
 export const plansApi = {
-  list: () => api.get('/plans'),
-  create: (data: any) => api.post('/plans', data),
-  update: (id: string, data: any) => api.patch(`/plans/${id}`, data),
+  list: () => api.get<Plan[]>('/plans'),
+  create: (data: { name: string; price: number; orderLimit: number | null; channelLimit: number | null; isActive: boolean; isDefault: boolean }) =>
+    api.post<Plan>('/plans', data),
+  update: (id: string, data: Partial<{ name: string; price: number; orderLimit: number | null; channelLimit: number | null; isActive: boolean; isDefault: boolean }>) =>
+    api.patch<Plan>(`/plans/${id}`, data),
   delete: (id: string) => api.delete(`/plans/${id}`),
 };
 
 // Subscriptions
 export const subscriptionsApi = {
-  current: () => api.get('/subscriptions/current'),
-  byTenant: (tenantId: string) => api.get(`/subscriptions/tenant/${tenantId}`),
-  update: (tenantId: string, data: any) => api.patch(`/subscriptions/tenant/${tenantId}`, data),
+  current: () => api.get<Subscription>('/subscriptions/current'),
+  byTenant: (tenantId: string) => api.get<Subscription>(`/subscriptions/tenant/${tenantId}`),
+  update: (tenantId: string, data: { planId?: string; status?: string }) =>
+    api.patch<Subscription>(`/subscriptions/tenant/${tenantId}`, data),
 };
 
 // Balance
 export const balanceApi = {
-  current: () => api.get('/balance/current'),
+  current: () => api.get<Balance>('/balance/current'),
+  transactions: () => api.get<BalanceTransaction[]>('/balance/transactions'),
   deduct: (amount: number, description?: string) => api.post('/balance/deduct', { amount, description }),
   topup: (amount: number, description?: string) => api.post('/balance/topup', { amount, description }),
 };
 
 // ECPay
 export const ecpayApi = {
-  createTopup: (amount: number, description?: string) => api.post('/ecpay/topup', { amount, description }),
+  createTopup: (amount: number, description?: string) => api.post<{ paymentUrl: string }>('/ecpay/topup', { amount, description }),
+};
+
+// Admin APIs
+export const adminApi = {
+  tenants: () => api.get<TenantWithSubscription[]>('/admin/tenants'),
+  subscriptions: () => api.get<Subscription[]>('/admin/subscriptions'),
+  refreshLineProfile: (customerId: string) => api.post(`/admin/customers/${customerId}/refresh-line-profile`),
 };
 
 export default api;

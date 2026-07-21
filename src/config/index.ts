@@ -2,6 +2,16 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+const isProduction = process.env.NODE_ENV === 'production';
+
+const jwtSecret = process.env.JWT_SECRET;
+if (!jwtSecret) {
+  if (isProduction) {
+    throw new Error('JWT_SECRET environment variable is required in production');
+  }
+  console.warn('WARNING: Using default JWT secret in non-production environment');
+}
+
 export const config = {
   databaseUrl: process.env.DATABASE_URL || 'file:./dev.db',
   line: {
@@ -10,7 +20,7 @@ export const config = {
     accessToken: process.env.LINE_ACCESS_TOKEN || '',
   },
   jwt: {
-    secret: process.env.JWT_SECRET || 'default-secret-change-in-production',
+    secret: jwtSecret || 'dev-only-secret-do-not-use-in-production',
   },
   llm: {
     apiKey: process.env.LLM_API_KEY || '',

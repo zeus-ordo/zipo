@@ -26,7 +26,13 @@
     "none": "None",
     "current": "Current",
     "previous": "Previous",
-    "next_page": "Next"
+    "next_page": "Next",
+    "user": "User",
+    "view": "View",
+    "no_data": "No Data",
+    "subtotal": "Subtotal",
+    "quantity": "Quantity",
+    "unit_price": "Unit Price"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -56,7 +62,8 @@
     "no_account": "Don't have an account?",
     "has_account": "Already have an account?",
     "login_success": "Login successful",
-    "logout_success": "Logged out successfully"
+    "logout_success": "Logged out successfully",
+    "system_description": "Fashion LINE Order System"
   },
   "register": {
     "create_account": "Register ZIPO",
@@ -75,7 +82,8 @@
     "month_orders": "Monthly Orders",
     "total_customers": "Total Customers",
     "pending_orders": "Pending Orders",
-    "recent_orders": "Recent Orders"
+    "recent_orders": "Recent Orders",
+    "message_count": "Messages"
   },
   "orders": {
     "title": "Orders",
@@ -94,7 +102,24 @@
     "order_items": "Order Items",
     "confirm_order": "Confirm Order",
     "edit_order": "Edit Order",
-    "delete_order": "Delete Order"
+    "delete_order": "Delete Order",
+    "order_detail": "Order Detail",
+    "no_orders": "No orders yet",
+    "no_drafts": "No order drafts",
+    "customer_info": "Customer Info",
+    "delivery_info": "Delivery Info",
+    "payment_info": "Payment Info",
+    "home_delivery": "Home Delivery",
+    "store_pickup": "Store Pickup",
+    "credit_card": "Credit Card",
+    "cash_on_delivery": "Cash on Delivery",
+    "transfer": "Transfer",
+    "cod": "COD"
+  },
+  "orderDrafts": {
+    "title": "Order Drafts",
+    "no_drafts": "No order drafts",
+    "new_messages": "New Messages"
   },
   "products": {
     "title": "Products",
@@ -106,19 +131,37 @@
     "stock": "Stock",
     "variants": "Variants",
     "import_excel": "Import Excel",
-    "export": "Export"
+    "export": "Export",
+    "active": "Active",
+    "inactive": "Inactive",
+    "all_products": "All Products",
+    "no_products": "No products yet",
+    "sku": "SKU",
+    "color": "Color",
+    "size": "Size",
+    "add_variant": "Add Variant",
+    "delete_variant": "Delete Variant",
+    "delete_product": "Delete Product",
+    "confirm_delete": "Confirm delete this product?"
   },
   "conversations": {
     "title": "Conversations",
     "customer": "Customer",
     "last_message": "Last Message",
-    "no_conversations": "No conversations yet"
+    "no_conversations": "No conversations yet",
+    "message": "Message",
+    "send": "Send",
+    "type_message": "Type a message..."
   },
   "notifications": {
     "title": "Notifications",
     "add_target": "Add Target",
     "line_user": "LINE User",
-    "email_notification": "Email Notification"
+    "email_notification": "Email Notification",
+    "notification_target": "Notification Target",
+    "no_targets": "No notification targets",
+    "target_name": "Name",
+    "delete_target": "Delete Target"
   },
   "line_settings": {
     "title": "LINE Settings",
@@ -130,7 +173,9 @@
     "save_settings": "Save Settings",
     "saving": "Saving...",
     "test_success": "Test successful",
-    "test_failed": "Test failed"
+    "test_failed": "Test failed",
+    "line_official_account": "LINE Official Account",
+    "if_not_change_leave_blank": "Leave blank if unchanged"
   },
   "store_settings": {
     "title": "Store Settings",
@@ -138,7 +183,8 @@
     "payment_methods": "Payment Methods",
     "delivery_methods": "Delivery Methods",
     "greeting": "Customer Greeting",
-    "order_template": "Order Confirmation Template"
+    "order_template": "Order Confirmation Template",
+    "settings_saved": "Settings saved"
   },
   "billing": {
     "title": "Billing & Subscription",
@@ -165,7 +211,8 @@
     "pay_with_ecpay": "Pay with ECPay",
     "order_limit": "Order Limit",
     "channel_limit": "Channel Limit",
-    "no_subscription": "No Subscription"
+    "no_subscription": "No Subscription",
+    "per_month": "/mo"
   },
   "admin": {
     "plans": {
@@ -194,6 +241,12 @@
     "invalid_email": "Invalid email format",
     "password_too_short": "Password must be at least 8 characters",
     "network_error": "Network error",
-    "unknown_error": "Unknown error"
+    "unknown_error": "Unknown error",
+    "error_occurred": "An error occurred",
+    "refresh_page": "Refresh page"
+  },
+  "system": {
+    "app_name": "ZIPO",
+    "app_description": "Fashion Order System"
   }
 }

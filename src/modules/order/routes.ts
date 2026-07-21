@@ -120,9 +120,9 @@ orderDraftRouter.patch('/:id', async (req, res) => {
     if (replySuggestion !== undefined) updateData.replySuggestion = replySuggestion;
 
     if (items && Array.isArray(items)) {
-      for (const item of items) {
+      await Promise.all(items.map((item) => {
         if (item.id) {
-          await prisma.orderDraftItem.update({
+          return prisma.orderDraftItem.update({
             where: { id: item.id },
             data: {
               matchedProductId: item.matchedProductId,
@@ -138,7 +138,8 @@ orderDraftRouter.patch('/:id', async (req, res) => {
             },
           });
         }
-      }
+        return Promise.resolve();
+      }));
     }
 
     const updated = await prisma.orderDraft.update({
@@ -261,24 +262,22 @@ orderDraftRouter.post('/:id/confirm', async (req, res) => {
         },
       });
 
-      for (const item of draft.items) {
-        await tx.orderItem.create({
-          data: {
-            tenantId,
-            orderId: newOrder.id,
-            productId: item.matchedProductId,
-            variantId: item.matchedVariantId,
-            rawText: item.rawText,
-            name: item.name,
-            color: item.color,
-            size: item.size,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            lineTotal: item.quantity && item.unitPrice ? item.quantity * item.unitPrice : null,
-            isFuzzy: item.isFuzzy,
-          },
-        });
-      }
+      await tx.orderItem.createMany({
+        data: draft.items.map((item) => ({
+          tenantId,
+          orderId: newOrder.id,
+          productId: item.matchedProductId,
+          variantId: item.matchedVariantId,
+          rawText: item.rawText,
+          name: item.name,
+          color: item.color,
+          size: item.size,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          lineTotal: item.quantity && item.unitPrice ? item.quantity * item.unitPrice : null,
+          isFuzzy: item.isFuzzy,
+        })),
+      });
 
       await tx.orderDraft.delete({ where: { id } });
 

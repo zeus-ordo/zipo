@@ -111,17 +111,11 @@ async function processTask(task: LlmTask): Promise<void> {
 
     const draftStatus = customerInfoComplete ? 'draft_needs_review' : (result.missing_fields.length > 0 ? 'draft_pending_info' : 'draft_needs_review');
 
-    const customer = await prisma.customer.findUnique({
-      where: { id: task.customerId },
-    });
-
-    const tenant = await prisma.tenant.findUnique({
-      where: { id: task.tenantId },
-    });
-
-    const conversation = await prisma.conversation.findUnique({
-      where: { id: task.conversationId },
-    });
+    const [customer, tenant, conversation] = await Promise.all([
+      prisma.customer.findUnique({ where: { id: task.customerId } }),
+      prisma.tenant.findUnique({ where: { id: task.tenantId } }),
+      prisma.conversation.findUnique({ where: { id: task.conversationId } }),
+    ]);
 
     if (!customer || !tenant || !conversation) {
       console.error('[LLM Queue] Missing required relations for OrderDraft');

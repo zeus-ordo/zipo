@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout } from '../components/Layout';
 import { storeSettingsApi } from '../api/client';
@@ -31,18 +31,19 @@ export function StoreSettingsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['store-settings'],
     queryFn: () => storeSettingsApi.get(),
-    onSuccess: (res) => {
-      if (res.data) {
-        setFormData({
-          storeName: res.data.storeName || '',
-          paymentMethods: res.data.paymentMethods || [],
-          deliveryMethods: res.data.deliveryMethods || [],
-          customerGreeting: res.data.customerGreeting || '',
-          orderConfirmTemplate: res.data.orderConfirmTemplate || '',
-        });
-      }
-    },
   });
+
+  useEffect(() => {
+    if (data?.data) {
+      setFormData({
+        storeName: data.data.storeName || '',
+        paymentMethods: data.data.paymentMethods || [],
+        deliveryMethods: data.data.deliveryMethods || [],
+        customerGreeting: data.data.customerGreeting || '',
+        orderConfirmTemplate: data.data.orderConfirmTemplate || '',
+      });
+    }
+  }, [data]);
 
   const updateMutation = useMutation({
     mutationFn: (data: typeof formData) => storeSettingsApi.update(data),

@@ -44,21 +44,6 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.get('/api/debug/users', async (_req, res) => {
-  const { prisma } = await import('./lib/prisma');
-  try {
-    const users = await prisma.user.findMany({
-      select: { id: true, email: true, name: true, role: true, tenantId: true },
-    });
-    const channels = await prisma.lineChannel.findMany({
-      select: { channelId: true, tenantId: true },
-    });
-    res.json({ users, channels });
-  } catch (error) {
-    res.status(500).json({ error: 'debug error' });
-  }
-});
-
 app.use('/api/webhooks/line', webhookRoutes);
 app.use('/api/auth', authLimiter);
 app.use('/api', apiLimiter);
