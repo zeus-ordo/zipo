@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, FileText, Package, MessageSquare, Bell, Settings, LogOut, Menu, X, Store, CreditCard, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, FileText, Package, MessageSquare, Bell, Settings, LogOut, Menu, X, Store, CreditCard, ChevronRight, Users, CreditCardIcon, Shield } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
 
-const navItems = [
+const storeNavItems = [
   { icon: LayoutDashboard, label: '儀表板', path: '/dashboard' },
   { icon: FileText, label: '訂單草稿', path: '/order-drafts' },
   { icon: FileText, label: '正式訂單', path: '/orders' },
@@ -15,18 +15,30 @@ const navItems = [
   { icon: CreditCard, label: '帳務訂閱', path: '/store/billing' },
 ];
 
+const adminNavItems = [
+  { icon: Shield, label: '平台儀表板', path: '/dashboard' },
+  { icon: Users, label: '店家管理', path: '/admin/tenants' },
+  { icon: CreditCardIcon, label: '方案管理', path: '/admin/billing/plans' },
+  { icon: CreditCard, label: '訂閱管理', path: '/admin/billing/subscriptions' },
+];
+
 export function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const [userName, setUserName] = useState('');
+  const [userRole, setUserRole] = useState('');
 
   useEffect(() => {
-    const user = localStorage.getItem('user');
-    if (user) {
-      setUserName(JSON.parse(user).name);
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      setUserName(user.name);
+      setUserRole(user.role);
     }
   }, []);
+
+  const navItems = userRole === 'platform_admin' ? adminNavItems : storeNavItems;
 
   const handleLogout = () => {
     localStorage.removeItem('token');
