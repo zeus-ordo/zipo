@@ -6,8 +6,8 @@ import { prisma } from '../../lib/prisma';
 const router = Router();
 
 router.use(authenticate);
-router.use(requireRole('platform_admin'));
 
+// GET /plans - available to all authenticated users
 router.get('/', async (req: Request, res: Response) => {
   const plans = await prisma.plan.findMany({
     where: { isActive: true },
@@ -16,7 +16,8 @@ router.get('/', async (req: Request, res: Response) => {
   res.json(plans);
 });
 
-router.post('/', async (req: Request, res: Response) => {
+// POST, PATCH, DELETE - only platform_admin
+router.post('/', requireRole('platform_admin'), async (req: Request, res: Response) => {
   const { name, price, orderLimit, channelLimit, features, isDefault } = req.body;
 
   if (isDefault) {
@@ -32,7 +33,7 @@ router.post('/', async (req: Request, res: Response) => {
   res.status(201).json(plan);
 });
 
-router.patch('/:id', async (req: Request, res: Response) => {
+router.patch('/:id', requireRole('platform_admin'), async (req: Request, res: Response) => {
   const id = req.params.id as string;
   const { name, price, orderLimit, channelLimit, features, isActive, isDefault } = req.body;
 
@@ -50,7 +51,7 @@ router.patch('/:id', async (req: Request, res: Response) => {
   res.json(plan);
 });
 
-router.delete('/:id', async (req: Request, res: Response) => {
+router.delete('/:id', requireRole('platform_admin'), async (req: Request, res: Response) => {
   const id = req.params.id as string;
   await prisma.plan.update({
     where: { id },
