@@ -53,18 +53,18 @@ export default function BillingPlansPage() {
     }
   };
 
-  if (loading) return <div className="p-8">Loading...</div>;
+  if (loading) return <div className="p-8">載入中...</div>;
 
   return (
     <Layout>
       <div className="p-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Subscription Plans</h1>
+          <h1 className="text-2xl font-bold">訂閱方案管理</h1>
           <button
             onClick={() => setEditingPlan({} as Plan)}
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           >
-            Add Plan
+            新增方案
           </button>
         </div>
 
@@ -72,12 +72,12 @@ export default function BillingPlansPage() {
           <table className="min-w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order Limit</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Channels</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">名稱</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">價格</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">訂單上限</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">頻道數</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">狀態</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -85,14 +85,14 @@ export default function BillingPlansPage() {
                 <tr key={plan.id}>
                   <td className="px-6 py-4">
                     {plan.name}
-                    {plan.isDefault && <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">Default</span>}
+                    {plan.isDefault && <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">預設</span>}
                   </td>
-                  <td className="px-6 py-4">${plan.price}/mo</td>
-                  <td className="px-6 py-4">{plan.orderLimit || 'Unlimited'}</td>
+                  <td className="px-6 py-4">${plan.price}/月</td>
+                  <td className="px-6 py-4">{plan.orderLimit || '無上限'}</td>
                   <td className="px-6 py-4">{plan.channelLimit}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2 py-1 rounded text-xs ${plan.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                      {plan.isActive ? 'Active' : 'Inactive'}
+                      {plan.isActive ? '啟用' : '停用'}
                     </span>
                   </td>
                   <td className="px-6 py-4">
@@ -100,7 +100,7 @@ export default function BillingPlansPage() {
                       onClick={() => setEditingPlan(plan)}
                       className="text-blue-600 hover:text-blue-800 mr-4"
                     >
-                      Edit
+                      編輯
                     </button>
                   </td>
                 </tr>
@@ -140,10 +140,10 @@ function PlanModal({ plan, onSave, onClose }: { plan: Plan | null; onSave: (p: P
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <h2 className="text-xl font-bold mb-4">{plan?.id ? 'Edit Plan' : 'New Plan'}</h2>
+        <h2 className="text-xl font-bold mb-4">{plan?.id ? '編輯方案' : '新增方案'}</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Name</label>
+            <label className="block text-sm font-medium text-gray-700">名稱</label>
             <input
               type="text"
               value={form.name}
@@ -154,7 +154,7 @@ function PlanModal({ plan, onSave, onClose }: { plan: Plan | null; onSave: (p: P
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Price ($/mo)</label>
+              <label className="block text-sm font-medium text-gray-700">價格 ($/月)</label>
               <input
                 type="number"
                 step="0.01"
@@ -165,18 +165,18 @@ function PlanModal({ plan, onSave, onClose }: { plan: Plan | null; onSave: (p: P
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Order Limit</label>
+              <label className="block text-sm font-medium text-gray-700">訂單上限</label>
               <input
                 type="number"
                 value={form.orderLimit}
                 onChange={(e) => setForm({ ...form, orderLimit: parseInt(e.target.value) })}
                 className="mt-1 block w-full border rounded-md px-3 py-2"
-                placeholder="0 = unlimited"
+                placeholder="0 = 無上限"
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Channel Limit</label>
+            <label className="block text-sm font-medium text-gray-700">頻道數上限</label>
             <input
               type="number"
               value={form.channelLimit}
@@ -193,11 +193,11 @@ function PlanModal({ plan, onSave, onClose }: { plan: Plan | null; onSave: (p: P
               onChange={(e) => setForm({ ...form, isDefault: e.target.checked })}
               className="mr-2"
             />
-            <label htmlFor="isDefault" className="text-sm text-gray-700">Default plan for new tenants</label>
+            <label htmlFor="isDefault" className="text-sm text-gray-700">新店家預設方案</label>
           </div>
           <div className="flex justify-end space-x-3 pt-4">
-            <button type="button" onClick={onClose} className="px-4 py-2 border rounded-md">Cancel</button>
-            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md">Save</button>
+            <button type="button" onClick={onClose} className="px-4 py-2 border rounded-md">取消</button>
+            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md">儲存</button>
           </div>
         </form>
       </div>
