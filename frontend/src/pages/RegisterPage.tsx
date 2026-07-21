@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { authApi, tenantApi } from '../api/client';
 import type { Tenant } from '../types';
 import { Eye, EyeOff } from 'lucide-react';
 
 export function RegisterPage() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -36,7 +38,7 @@ export function RegisterPage() {
 
       if (isNewTenant) {
         if (!tenantName.trim()) {
-          setError('請輸入店家名稱');
+          setError(t('errors.required'));
           setLoading(false);
           return;
         }
@@ -55,7 +57,7 @@ export function RegisterPage() {
       localStorage.setItem('user', JSON.stringify(res.data.user));
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.error || '註冊失敗');
+      setError(err.response?.data?.error || t('auth.register_error'));
     } finally {
       setLoading(false);
     }
@@ -68,7 +70,7 @@ export function RegisterPage() {
           <div className="w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center" style={{ backgroundColor: 'var(--color-text-primary)' }}>
             <span className="text-white text-xl font-semibold">Z</span>
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight mb-2" style={{ color: 'var(--color-text-primary)' }}>註冊 ZIPO</h1>
+          <h1 className="text-2xl font-semibold tracking-tight mb-2" style={{ color: 'var(--color-text-primary)' }}>{t('register.create_account')}</h1>
           <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>服飾業 LINE 接單客服系統</p>
         </div>
 
@@ -78,7 +80,7 @@ export function RegisterPage() {
           )}
 
           <div>
-            <label className="label">姓名</label>
+            <label className="label">{t('auth.name')}</label>
             <input
               type="text"
               value={name}
@@ -90,7 +92,7 @@ export function RegisterPage() {
           </div>
 
           <div>
-            <label className="label">信箱</label>
+            <label className="label">{t('auth.email')}</label>
             <input
               type="email"
               value={email}
@@ -102,7 +104,7 @@ export function RegisterPage() {
           </div>
 
           <div>
-            <label className="label">密碼</label>
+            <label className="label">{t('auth.password')}</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -123,14 +125,14 @@ export function RegisterPage() {
           </div>
 
           <div>
-            <label className="label">角色</label>
+            <label className="label">{t('register.role')}</label>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as 'admin' | 'staff')}
               className="input"
             >
-              <option value="admin">管理員</option>
-              <option value="staff">員工</option>
+              <option value="admin">{t('register.admin')}</option>
+              <option value="staff">{t('register.staff')}</option>
             </select>
           </div>
 
@@ -143,12 +145,12 @@ export function RegisterPage() {
               className="w-4 h-4 rounded"
               style={{ accentColor: 'var(--color-accent)' }}
             />
-            <label htmlFor="newTenant" className="text-sm" style={{ color: 'var(--color-text-primary)' }}>建立新店家</label>
+            <label htmlFor="newTenant" className="text-sm" style={{ color: 'var(--color-text-primary)' }}>{t('register.new_tenant')}</label>
           </div>
 
           {isNewTenant ? (
             <div>
-              <label className="label">店家名稱</label>
+              <label className="label">{t('register.tenant_name')}</label>
               <input
                 type="text"
                 value={tenantName}
@@ -160,14 +162,14 @@ export function RegisterPage() {
             </div>
           ) : (
             <div>
-              <label className="label">選擇店家</label>
+              <label className="label">{t('register.select_tenant')}</label>
               <select
                 value={tenantId}
                 onChange={(e) => setTenantId(e.target.value)}
                 className="input"
                 required={!isNewTenant}
               >
-                <option value="">請選擇店家</option>
+                <option value="">{t('register.select_tenant')}</option>
                 {tenants.map((t) => (
                   <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
@@ -181,11 +183,11 @@ export function RegisterPage() {
             className="btn btn-primary w-full mt-6"
             style={{ backgroundColor: 'var(--color-success)' }}
           >
-            {loading ? '註冊中...' : '註冊'}
+            {loading ? t('register.registering') : t('auth.register')}
           </button>
 
           <p className="text-center text-sm mt-6" style={{ color: 'var(--color-text-secondary)' }}>
-            已有帳號？<a href="/login" className="font-medium" style={{ color: 'var(--color-accent)' }}>登入</a>
+            {t('auth.has_account')}<a href="/login" className="font-medium" style={{ color: 'var(--color-accent)' }}>{t('auth.login')}</a>
           </p>
         </form>
       </div>

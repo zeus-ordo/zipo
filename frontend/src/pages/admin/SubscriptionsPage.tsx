@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { tenantApi, subscriptionsApi } from '../../api/client';
 import { Layout } from '../../components/Layout';
 
@@ -13,6 +14,7 @@ interface Subscription {
 }
 
 export default function SubscriptionsPage() {
+  const { t } = useTranslation();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -29,7 +31,6 @@ export default function SubscriptionsPage() {
           const subRes = await subscriptionsApi.byTenant(tenant.id);
           subscriptions.push({ ...subRes.data, tenant });
         } catch {
-          // Tenant might not have subscription
         }
       }
       setSubscriptions(subscriptions);
@@ -49,22 +50,22 @@ export default function SubscriptionsPage() {
     }
   };
 
-  if (loading) return <div className="p-8">載入中...</div>;
+  if (loading) return <div className="p-8">{t('common.loading')}</div>;
 
   return (
     <Layout>
       <div className="p-8">
-        <h1 className="text-2xl font-bold mb-6">店家訂閱管理</h1>
+        <h1 className="text-2xl font-bold mb-6">{t('admin.subscriptions.title')}</h1>
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <table className="min-w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">店家</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">方案</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">狀態</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">到期日</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.subscriptions.tenant')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.subscriptions.plan')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.subscriptions.expires')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -73,17 +74,17 @@ export default function SubscriptionsPage() {
                 <td className="px-6 py-4">
                   <div className="font-medium">{sub.tenant?.name || 'N/A'}</div>
                 </td>
-                  <td className="px-6 py-4">{sub.plan?.name || '無方案'}</td>
+                  <td className="px-6 py-4">{sub.plan?.name || t('billing.no_subscription')}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2 py-1 rounded text-xs ${
                       sub.status === 'active' ? 'bg-green-100 text-green-800' :
                       sub.status === 'expired' ? 'bg-red-100 text-red-800' :
                       'bg-gray-100 text-gray-800'
                     }`}>
-                      {sub.status === 'active' ? '有效' :
-                       sub.status === 'expired' ? '已過期' :
-                       sub.status === 'suspended' ? '已停權' :
-                       sub.status === 'cancelled' ? '已取消' : sub.status}
+                      {sub.status === 'active' ? t('billing.status_active') :
+                       sub.status === 'expired' ? t('billing.status_expired') :
+                       sub.status === 'suspended' ? t('billing.status_suspended') :
+                       sub.status === 'cancelled' ? t('billing.status_cancelled') : sub.status}
                     </span>
                   </td>
                   <td className="px-6 py-4">{new Date(sub.expiresAt).toLocaleDateString()}</td>
@@ -93,10 +94,10 @@ export default function SubscriptionsPage() {
                       onChange={(e) => updateStatus(sub.tenantId, e.target.value)}
                       className="border rounded px-2 py-1 text-sm"
                     >
-                      <option value="active">有效</option>
-                      <option value="suspended">停權</option>
-                      <option value="cancelled">取消</option>
-                      <option value="expired">過期</option>
+                      <option value="active">{t('billing.status_active')}</option>
+                      <option value="suspended">{t('billing.status_suspended')}</option>
+                      <option value="cancelled">{t('billing.status_cancelled')}</option>
+                      <option value="expired">{t('billing.status_expired')}</option>
                     </select>
                   </td>
                 </tr>

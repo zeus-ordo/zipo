@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../api/client';
 import { Eye, EyeOff } from 'lucide-react';
 
 export function LoginPage() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -22,7 +24,7 @@ export function LoginPage() {
       localStorage.setItem('user', JSON.stringify(res.data.user));
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.error || '登入失敗');
+      setError(err.response?.data?.error || t('auth.login_error'));
     } finally {
       setLoading(false);
     }
@@ -45,7 +47,7 @@ export function LoginPage() {
           )}
 
           <div>
-            <label className="label">信箱</label>
+            <label className="label">{t('auth.email')}</label>
             <input
               type="email"
               value={email}
@@ -57,7 +59,7 @@ export function LoginPage() {
           </div>
 
           <div>
-            <label className="label">密碼</label>
+            <label className="label">{t('auth.password')}</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -82,12 +84,12 @@ export function LoginPage() {
             disabled={loading}
             className="btn btn-primary w-full mt-6"
           >
-            {loading ? '登入中...' : '登入'}
+            {loading ? t('auth.login') + '...' : t('auth.login')}
           </button>
         </form>
 
         <p className="text-center text-sm mt-8" style={{ color: 'var(--color-text-secondary)' }}>
-          還沒有帳號？<a href="/register" className="font-medium" style={{ color: 'var(--color-accent)' }}>註冊</a>
+          {t('auth.no_account')}<a href="/register" className="font-medium" style={{ color: 'var(--color-accent)' }}>{t('auth.register')}</a>
         </p>
       </div>
     </div>

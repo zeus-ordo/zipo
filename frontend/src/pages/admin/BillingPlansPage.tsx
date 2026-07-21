@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { plansApi } from '../../api/client';
 import { Layout } from '../../components/Layout';
 
@@ -20,6 +21,7 @@ interface Plan {
 }
 
 export default function BillingPlansPage() {
+  const { t } = useTranslation();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
@@ -53,18 +55,18 @@ export default function BillingPlansPage() {
     }
   };
 
-  if (loading) return <div className="p-8">載入中...</div>;
+  if (loading) return <div className="p-8">{t('common.loading')}</div>;
 
   return (
     <Layout>
       <div className="p-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">訂閱方案管理</h1>
+          <h1 className="text-2xl font-bold">{t('admin.plans.title')}</h1>
           <button
             onClick={() => setEditingPlan({} as Plan)}
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           >
-            新增方案
+            {t('admin.plans.add_plan')}
           </button>
         </div>
 
@@ -72,12 +74,12 @@ export default function BillingPlansPage() {
           <table className="min-w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">名稱</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">價格</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">訂單上限</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">頻道數</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">狀態</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">操作</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('common.name')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.plans.price')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.plans.order_limit')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.plans.channel_limit')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('common.status')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -85,14 +87,14 @@ export default function BillingPlansPage() {
                 <tr key={plan.id}>
                   <td className="px-6 py-4">
                     {plan.name}
-                    {plan.isDefault && <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">預設</span>}
+                    {plan.isDefault && <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">{t('admin.plans.default')}</span>}
                   </td>
-                  <td className="px-6 py-4">${plan.price}/月</td>
-                  <td className="px-6 py-4">{plan.orderLimit || '無上限'}</td>
+                  <td className="px-6 py-4">${plan.price}/{t('billing.price_per_month').replace('單價', '').replace('/月', '/mo')}</td>
+                  <td className="px-6 py-4">{plan.orderLimit || t('billing.unlimited')}</td>
                   <td className="px-6 py-4">{plan.channelLimit}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2 py-1 rounded text-xs ${plan.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                      {plan.isActive ? '啟用' : '停用'}
+                      {plan.isActive ? t('admin.plans.active') : t('admin.plans.inactive')}
                     </span>
                   </td>
                   <td className="px-6 py-4">
@@ -100,7 +102,7 @@ export default function BillingPlansPage() {
                       onClick={() => setEditingPlan(plan)}
                       className="text-blue-600 hover:text-blue-800 mr-4"
                     >
-                      編輯
+                      {t('common.edit')}
                     </button>
                   </td>
                 </tr>
@@ -122,6 +124,7 @@ export default function BillingPlansPage() {
 }
 
 function PlanModal({ plan, onSave, onClose }: { plan: Plan | null; onSave: (p: Partial<Plan>) => void; onClose: () => void }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState<Partial<Plan>>(plan || {
     name: '',
     price: 0,
@@ -140,10 +143,10 @@ function PlanModal({ plan, onSave, onClose }: { plan: Plan | null; onSave: (p: P
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <h2 className="text-xl font-bold mb-4">{plan?.id ? '編輯方案' : '新增方案'}</h2>
+        <h2 className="text-xl font-bold mb-4">{plan?.id ? t('admin.plans.edit_plan') : t('admin.plans.new_plan')}</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">名稱</label>
+            <label className="block text-sm font-medium text-gray-700">{t('common.name')}</label>
             <input
               type="text"
               value={form.name}
@@ -154,7 +157,7 @@ function PlanModal({ plan, onSave, onClose }: { plan: Plan | null; onSave: (p: P
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">價格 ($/月)</label>
+              <label className="block text-sm font-medium text-gray-700">{t('admin.plans.price')}</label>
               <input
                 type="number"
                 step="0.01"
@@ -165,7 +168,7 @@ function PlanModal({ plan, onSave, onClose }: { plan: Plan | null; onSave: (p: P
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">訂單上限</label>
+              <label className="block text-sm font-medium text-gray-700">{t('admin.plans.order_limit')}</label>
               <input
                 type="number"
                 value={form.orderLimit}
@@ -176,7 +179,7 @@ function PlanModal({ plan, onSave, onClose }: { plan: Plan | null; onSave: (p: P
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">頻道數上限</label>
+            <label className="block text-sm font-medium text-gray-700">{t('admin.plans.channel_limit')}</label>
             <input
               type="number"
               value={form.channelLimit}
@@ -193,11 +196,11 @@ function PlanModal({ plan, onSave, onClose }: { plan: Plan | null; onSave: (p: P
               onChange={(e) => setForm({ ...form, isDefault: e.target.checked })}
               className="mr-2"
             />
-            <label htmlFor="isDefault" className="text-sm text-gray-700">新店家預設方案</label>
+            <label htmlFor="isDefault" className="text-sm text-gray-700">{t('admin.plans.default_plan')}</label>
           </div>
           <div className="flex justify-end space-x-3 pt-4">
-            <button type="button" onClick={onClose} className="px-4 py-2 border rounded-md">取消</button>
-            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md">儲存</button>
+            <button type="button" onClick={onClose} className="px-4 py-2 border rounded-md">{t('common.cancel')}</button>
+            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md">{t('common.save')}</button>
           </div>
         </form>
       </div>

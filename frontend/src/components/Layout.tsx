@@ -1,28 +1,31 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, FileText, Package, MessageSquare, Bell, Settings, LogOut, Menu, X, Store, CreditCard, ChevronRight, Users, CreditCardIcon, Shield } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { LayoutDashboard, FileText, Package, MessageSquare, Bell, Settings, LogOut, Menu, Store, CreditCard, ChevronRight, Users, CreditCardIcon, Shield } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 const storeNavItems = [
-  { icon: LayoutDashboard, label: '儀表板', path: '/dashboard' },
-  { icon: FileText, label: '訂單草稿', path: '/order-drafts' },
-  { icon: FileText, label: '正式訂單', path: '/orders' },
-  { icon: Package, label: '商品管理', path: '/products' },
-  { icon: MessageSquare, label: '對話紀錄', path: '/conversations' },
-  { icon: Bell, label: '通知設定', path: '/notifications' },
-  { icon: Settings, label: 'LINE 設定', path: '/line-settings' },
-  { icon: Store, label: '商店設定', path: '/store-settings' },
-  { icon: CreditCard, label: '帳務訂閱', path: '/store/billing' },
+  { icon: LayoutDashboard, labelKey: 'nav.dashboard', path: '/dashboard' },
+  { icon: FileText, labelKey: 'nav.order_drafts', path: '/order-drafts' },
+  { icon: FileText, labelKey: 'nav.orders', path: '/orders' },
+  { icon: Package, labelKey: 'nav.products', path: '/products' },
+  { icon: MessageSquare, labelKey: 'nav.conversations', path: '/conversations' },
+  { icon: Bell, labelKey: 'nav.notifications', path: '/notifications' },
+  { icon: Settings, labelKey: 'nav.line_settings', path: '/line-settings' },
+  { icon: Store, labelKey: 'nav.store_settings', path: '/store-settings' },
+  { icon: CreditCard, labelKey: 'nav.billing', path: '/store/billing' },
 ];
 
 const adminNavItems = [
-  { icon: Shield, label: '平台儀表板', path: '/dashboard' },
-  { icon: Users, label: '店家管理', path: '/admin/tenants' },
-  { icon: CreditCardIcon, label: '方案管理', path: '/admin/billing/plans' },
-  { icon: CreditCard, label: '訂閱管理', path: '/admin/billing/subscriptions' },
+  { icon: Shield, labelKey: 'nav.platform_dashboard', path: '/dashboard' },
+  { icon: Users, labelKey: 'nav.tenant_management', path: '/admin/tenants' },
+  { icon: CreditCardIcon, labelKey: 'nav.plan_management', path: '/admin/billing/plans' },
+  { icon: CreditCard, labelKey: 'nav.subscription_management', path: '/admin/billing/subscriptions' },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -107,7 +110,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 }}
               >
                 <item.icon size={18} strokeWidth={1.75} />
-                <span>{item.label}</span>
+                <span>{t(item.labelKey)}</span>
                 {isActive && (
                   <ChevronRight size={14} className="ml-auto opacity-60" />
                 )}
@@ -116,29 +119,34 @@ export function Layout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4" style={{ borderTop: '1px solid var(--color-border-subtle)', backgroundColor: 'var(--color-surface)' }}>
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium" style={{ backgroundColor: 'var(--color-accent-light)', color: 'var(--color-accent)' }}>
-              {userName?.charAt(0)?.toUpperCase() || 'U'}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text-primary)' }}>{userName || '使用者'}</p>
-            </div>
+        <div className="absolute bottom-0 left-0 right-0" style={{ borderTop: '1px solid var(--color-border-subtle)', backgroundColor: 'var(--color-surface)' }}>
+          <div className="p-4">
+            <LanguageSwitcher />
           </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200"
-            style={{ color: 'var(--color-error)' }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(255, 59, 48, 0.08)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-            }}
-          >
-            <LogOut size={16} strokeWidth={1.75} />
-            登出
-          </button>
+          <div className="p-4 pt-0">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium" style={{ backgroundColor: 'var(--color-accent-light)', color: 'var(--color-accent)' }}>
+                {userName?.charAt(0)?.toUpperCase() || 'U'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text-primary)' }}>{userName || '使用者'}</p>
+              </div>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200"
+              style={{ color: 'var(--color-error)' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 59, 48, 0.08)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+            >
+              <LogOut size={16} strokeWidth={1.75} />
+              {t('auth.logout')}
+            </button>
+          </div>
         </div>
       </aside>
 
