@@ -89,7 +89,7 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const tenantId = req.user!.tenantId!;
-    const { name, sku, category, description, basePrice } = req.body;
+    const { name, sku, category, description, basePrice, variants } = req.body;
 
     if (!name || name.trim() === '') {
       res.status(400).json({ error: '商品名稱為必填欄位' });
@@ -106,21 +106,26 @@ router.post('/', async (req, res) => {
         basePrice: basePrice !== undefined ? basePrice : null,
         sourceType: 'manual',
         isActive: true,
+        variants: variants && variants.length > 0 ? {
+          create: variants.map((v: { color?: string; size?: string; price?: number; variantSku?: string }) => ({
+            tenantId,
+            color: v.color?.trim() || null,
+            size: v.size?.trim() || null,
+            price: v.price !== undefined ? v.price : null,
+            variantSku: v.variantSku?.trim() || null,
+            isActive: true,
+          })),
+        } : {
+          create: {
+            tenantId,
+            isActive: true,
+          },
+        },
       },
       include: {
         variants: true,
       },
     });
-
-    if (product.variants.length === 0) {
-      await prisma.productVariant.create({
-        data: {
-          tenantId,
-          productId: product.id,
-          isActive: true,
-        },
-      });
-    }
 
     await prisma.auditLog.create({
       data: {
@@ -133,12 +138,7 @@ router.post('/', async (req, res) => {
       },
     }).catch(console.error);
 
-    const created = await prisma.product.findUnique({
-      where: { id: product.id },
-      include: { variants: true },
-    });
-
-    res.status(201).json(created);
+    res.status(201).json(product);
   } catch (error) {
     console.error('Error creating product:', error);
     res.status(500).json({ error: '建立商品失敗' });

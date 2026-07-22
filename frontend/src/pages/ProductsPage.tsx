@@ -185,6 +185,7 @@ export function ProductsPage() {
     setFormData({ name: '', sku: '', category: '', description: '', basePrice: '' });
     setVariants([{ variantSku: '', color: '', size: '', price: '' }]);
     setEditingProduct(null);
+    setShowModal(true);
   };
 
   const closeModal = () => {
@@ -219,7 +220,16 @@ export function ProductsPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const productData: Partial<Product> = {
+    const validVariants = variants
+      .filter(v => v.color || v.size || v.price || v.variantSku)
+      .map(v => ({
+        color: v.color || undefined,
+        size: v.size || undefined,
+        price: v.price ? parseFloat(v.price) : undefined,
+        variantSku: v.variantSku || undefined,
+      }));
+
+    const productData: Partial<Product> & { variants?: Array<{ color?: string; size?: string; price?: number; variantSku?: string }> } = {
       name: formData.name,
       sku: formData.sku || undefined,
       category: formData.category || undefined,
@@ -231,6 +241,9 @@ export function ProductsPage() {
     if (editingProduct) {
       updateMutation.mutate({ id: editingProduct.id, data: productData });
     } else {
+      if (validVariants.length > 0) {
+        productData.variants = validVariants;
+      }
       createMutation.mutate(productData);
     }
   };
@@ -312,7 +325,7 @@ export function ProductsPage() {
             <input type="file" accept=".xlsx,.xls,.csv" onChange={handleImport} className="hidden" disabled={importing} />
           </label>
           <button
-            onClick={() => { resetForm(); setShowModal(true); }}
+            onClick={() => { resetForm(); }}
             className="btn btn-primary"
           >
             <Plus size={18} />
@@ -465,62 +478,62 @@ export function ProductsPage() {
                 </div>
               </div>
 
-              {editingProduct && (
-                <div className="border-t pt-4" style={{ borderColor: 'var(--color-border-subtle)' }}>
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>{t('products.variants')}</h3>
-                    <button
-                      type="button"
-                      onClick={addVariant}
-                      className="btn btn-secondary text-sm"
-                    >
-                      <Plus size={14} />
-                      {t('products.add_variant')}
-                    </button>
-                  </div>
+              <div className="border-t pt-4" style={{ borderColor: 'var(--color-border-subtle)' }}>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>{t('products.variants')}</h3>
+                  <button
+                    type="button"
+                    onClick={addVariant}
+                    className="btn btn-secondary text-sm"
+                  >
+                    <Plus size={14} />
+                    {t('products.add_variant')}
+                  </button>
+                </div>
 
-                  <div className="space-y-3">
-                    {variants.map((variant, index) => (
-                      <div key={index} className="flex gap-2 items-start p-3 rounded-lg" style={{ backgroundColor: 'var(--color-bg)' }}>
-                        <div className="flex-1 grid grid-cols-4 gap-2">
-                          <div>
-                            <input
-                              type="text"
-                              placeholder={t('products.color')}
-                              value={variant.color}
-                              onChange={(e) => updateVariant(index, 'color', e.target.value)}
-                              className="input text-sm"
-                            />
-                          </div>
-                          <div>
-                            <input
-                              type="text"
-                              placeholder={t('products.size')}
-                              value={variant.size}
-                              onChange={(e) => updateVariant(index, 'size', e.target.value)}
-                              className="input text-sm"
-                            />
-                          </div>
-                          <div>
-                            <input
-                              type="number"
-                              placeholder={t('common.price')}
-                              value={variant.price}
-                              onChange={(e) => updateVariant(index, 'price', e.target.value)}
-                              className="input text-sm"
-                            />
-                          </div>
-                          <div>
-                            <input
-                              type="text"
-                              placeholder={t('products.sku')}
-                              value={variant.variantSku}
-                              onChange={(e) => updateVariant(index, 'variantSku', e.target.value)}
-                              className="input text-sm"
-                            />
-                          </div>
+                <div className="space-y-3">
+                  {variants.map((variant, index) => (
+                    <div key={index} className="flex gap-2 items-start p-3 rounded-lg" style={{ backgroundColor: 'var(--color-bg)' }}>
+                      <div className="flex-1 grid grid-cols-4 gap-2">
+                        <div>
+                          <input
+                            type="text"
+                            placeholder={t('products.color')}
+                            value={variant.color}
+                            onChange={(e) => updateVariant(index, 'color', e.target.value)}
+                            className="input text-sm"
+                          />
                         </div>
-                        <div className="flex gap-1">
+                        <div>
+                          <input
+                            type="text"
+                            placeholder={t('products.size')}
+                            value={variant.size}
+                            onChange={(e) => updateVariant(index, 'size', e.target.value)}
+                            className="input text-sm"
+                          />
+                        </div>
+                        <div>
+                          <input
+                            type="number"
+                            placeholder={t('common.price')}
+                            value={variant.price}
+                            onChange={(e) => updateVariant(index, 'price', e.target.value)}
+                            className="input text-sm"
+                          />
+                        </div>
+                        <div>
+                          <input
+                            type="text"
+                            placeholder={t('products.sku')}
+                            value={variant.variantSku}
+                            onChange={(e) => updateVariant(index, 'variantSku', e.target.value)}
+                            className="input text-sm"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-1">
+                        {editingProduct && (
                           <button
                             type="button"
                             onClick={() => saveVariant(index)}
@@ -530,21 +543,21 @@ export function ProductsPage() {
                           >
                             <Save size={16} />
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => removeVariant(index)}
-                            className="btn-ghost"
-                            style={{ color: 'var(--color-error)' }}
-                            title={t('products.delete_variant')}
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removeVariant(index)}
+                          className="btn-ghost"
+                          style={{ color: 'var(--color-error)' }}
+                          title={t('products.delete_variant')}
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
-              )}
+              </div>
 
               <div className="flex gap-3 pt-4 border-t" style={{ borderColor: 'var(--color-border-subtle)' }}>
                 <button type="button" onClick={closeModal} className="flex-1 btn btn-secondary">
