@@ -65,7 +65,7 @@
     "has_account": "すでにアカウントをお持ちですか？",
     "login_success": "ログインしました",
     "logout_success": "ログアウトしました",
-    "system_description": "アパレル LINE 受注システム"
+    "system_description": "LINE AI 受注システム"
   },
   "register": {
     "create_account": "ZIPO に登録",
@@ -309,6 +309,6 @@
   },
   "system": {
     "app_name": "ZIPO",
-    "app_description": "アパレル受注明細"
+    "app_description": "ZIPO AI 受注システム"
   }
 }

@@ -65,7 +65,7 @@
     "has_account": "Already have an account?",
     "login_success": "Login successful",
     "logout_success": "Logged out successfully",
-    "system_description": "Fashion LINE Order System"
+    "system_description": "LINE AI Order System"
   },
   "register": {
     "create_account": "Register ZIPO",
@@ -309,6 +309,6 @@
   },
   "system": {
     "app_name": "ZIPO",
-    "app_description": "Fashion Order System"
+    "app_description": "ZIPO AI Order System"
   }
 }

@@ -65,7 +65,7 @@
     "has_account": "已有帳號？",
     "login_success": "登入成功",
     "logout_success": "登出成功",
-    "system_description": "服飾業 LINE 接單客服系統"
+    "system_description": "LINE AI 接單客服系統"
   },
   "register": {
     "create_account": "註冊 ZIPO",
@@ -309,6 +309,6 @@
   },
   "system": {
     "app_name": "ZIPO",
-    "app_description": "服飾接單系統"
+    "app_description": "ZIPO AI 接單系統"
   }
 }
