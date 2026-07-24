@@ -175,8 +175,8 @@ export function NotificationsPage() {
       )}
 
       {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-          <div className="card rounded-xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 flex items-end sm:items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+          <div className="card rounded-t-2xl sm:rounded-xl p-6 w-full sm:max-w-md modal-mobile">
             <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--color-text-primary)' }}>{t('notifications.add_target')}</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>

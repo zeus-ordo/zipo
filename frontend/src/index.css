@@ -214,11 +214,14 @@ input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid var(--color-border-subtle);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 600px;
 }
 
 .table th {
@@ -315,5 +318,60 @@ input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-
   }
   .card-hover:hover {
     transform: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .page-title {
+    font-size: 22px;
+  }
+
+  .page-header {
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    padding: 16px;
+  }
+
+  .table-container {
+    margin: 0 -16px;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  .table th,
+  .table td {
+    padding: 12px 14px;
+  }
+
+  .modal-mobile {
+    margin: 0;
+    border-radius: 16px 16px 0 0;
+    max-height: 90vh;
+  }
+
+  .btn {
+    padding: 12px 16px;
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .input {
+    padding: 14px 16px;
+    font-size: 16px;
+  }
+
+  .page-padding-mobile {
+    padding: 16px;
+  }
+
+  .stack-mobile {
+    flex-direction: column;
+  }
+
+  .grid-mobile-1 {
+    grid-template-columns: 1fr;
   }
 }

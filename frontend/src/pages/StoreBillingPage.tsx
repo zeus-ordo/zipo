@@ -226,8 +226,8 @@ export default function StoreBillingPage() {
         </div>
 
         {showTopupModal && (
-          <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-            <div className="card rounded-lg p-6 w-full max-w-sm">
+          <div className="fixed inset-0 flex items-end sm:items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+            <div className="card rounded-t-2xl sm:rounded-xl p-6 w-full sm:max-w-sm modal-mobile">
               <h3 className="text-lg font-bold mb-4">{t('billing.top_up_title')}</h3>
               <div className="mb-4">
                 <label className="label">{t('billing.amount_usd')}</label>

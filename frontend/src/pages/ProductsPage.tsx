@@ -417,19 +417,22 @@ export function ProductsPage() {
       )}
 
       {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-          <div className="card rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 flex items-end sm:items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+          <div className="card rounded-t-2xl sm:rounded-xl p-6 w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto modal-mobile">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
                 {editingProduct ? t('products.edit_product') : t('products.add_product')}
               </h2>
-              <button onClick={closeModal} className="btn-ghost">
+              <button onClick={closeModal} className="btn-ghost sm:hidden p-2 -mr-2">
+                <X size={24} />
+              </button>
+              <button onClick={closeModal} className="btn-ghost hidden sm:block">
                 <X size={24} />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <label className="label">{t('products.product_name')} *</label>
                   <input
@@ -493,8 +496,8 @@ export function ProductsPage() {
 
                 <div className="space-y-3">
                   {variants.map((variant, index) => (
-                    <div key={index} className="flex gap-2 items-start p-3 rounded-lg" style={{ backgroundColor: 'var(--color-bg)' }}>
-                      <div className="flex-1 grid grid-cols-4 gap-2">
+                    <div key={index} className="flex flex-col sm:flex-row gap-2 items-start p-3 rounded-lg" style={{ backgroundColor: 'var(--color-bg)' }}>
+                      <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-2 w-full">
                         <div>
                           <input
                             type="text"
