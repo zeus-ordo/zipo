@@ -146,8 +146,10 @@ model Message {
   id             String   @id @default(uuid())
   conversationId String
   senderType     String
-  content        String
+  content        String?
   rawPayload     String?
+  imageUrl       String?
+  imageBase64    String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -164,6 +166,8 @@ model Product {
   category    String?
   description String?
   basePrice   Float?
+  imageUrl    String?
+  imageKey    String?
   isActive    Boolean  @default(true)
   sourceType  String
   sourceRef   String?
