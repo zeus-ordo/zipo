@@ -193,7 +193,13 @@
     "add_variant": "新增規格",
     "delete_variant": "刪除規格",
     "delete_product": "刪除商品",
-    "confirm_delete": "確認刪除這個商品？"
+    "confirm_delete": "確認刪除這個商品？",
+    "recognize_from_image": "用圖片建立",
+    "invalid_image_type": "只支援 JPG、PNG、WEBP 格式",
+    "image_too_large": "圖片太大，請選擇小於 5MB 的圖片",
+    "image_recognized": "已從圖片自動填入",
+    "recognition_failed": "圖片辨識失敗，請手動填寫",
+    "image": "圖片"
   },
   "conversations": {
     "title": "對話紀錄",

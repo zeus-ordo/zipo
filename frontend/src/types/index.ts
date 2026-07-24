@@ -147,6 +147,8 @@ export interface Product {
   category: string | null;
   description: string | null;
   basePrice: number | null;
+  imageUrl: string | null;
+  imageKey: string | null;
   isActive: boolean;
   sourceType: 'manual' | 'excel' | 'google_sheet';
   sourceRef: string | null;

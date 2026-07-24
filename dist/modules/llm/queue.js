@@ -43,7 +43,7 @@ async function processTask(task) {
         senderType: m.senderType,
         content: m.content,
         createdAt: m.createdAt,
-    })));
+    })), task.imageBase64);
     console.log(`[LLM Queue] Extraction result: intent=${result.intent}, confidence=${result.confidence}, action=${result.draft_action}, items=${result.items.length}, missing=${result.missing_fields.join(',') || 'none'}`);
     console.log(`[LLM Queue] Customer info: name=${result.customer_info?.name}, phone=${result.customer_info?.phone}, address=${result.customer_info?.address}`);
     const customerInfoComplete = !!(result.customer_info?.name && result.customer_info?.phone && result.customer_info?.address);

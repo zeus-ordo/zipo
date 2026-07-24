@@ -193,7 +193,13 @@
     "add_variant": "規格を追加",
     "delete_variant": "規格を削除",
     "delete_product": "商品を削除",
-    "confirm_delete": "この商品を削除しますか？"
+    "confirm_delete": "この商品を削除しますか？",
+    "recognize_from_image": "画像から作成",
+    "invalid_image_type": "JPG、PNG、WEBP のみ対応",
+    "image_too_large": "画像が大きすぎます、5MB 以下を選択",
+    "image_recognized": "画像から自動入力されました",
+    "recognition_failed": "画像認識に失敗しました、手動で入力してください",
+    "image": "画像"
   },
   "conversations": {
     "title": "会話履歴",

@@ -53,6 +53,45 @@ async function callLlmApi(messages) {
     }
     throw lastError || new Error('LLM call failed');
 }
+async function recognizeProductFromImage(base64Image) {
+    const IMAGE_PROMPT = `你是服飾商品辨識專家。分析這張圖片，輸出商品資訊：
+
+Output JSON only, no other text:
+{
+  "name": "商品名稱（如：黑色T恤、藍色洋裝）",
+  "color": "顏色（如：黑色、藍色、紅色），如無法判斷回傳 null",
+  "size": "尺寸（如：S、M、L、32），如無法判斷回傳 null",
+  "price": 價格（數字，如：1290），如無法判斷回傳 null",
+  "raw_text": "圖片中所有辨識到的文字原文",
+  "confidence": 0.0-1.0 的信心度
+}`;
+    const imageUrl = `data:image/jpeg;base64,${base64Image}`;
+    const messages = [
+        { role: 'system', content: IMAGE_PROMPT },
+        {
+            role: 'user',
+            content: [
+                { type: 'image_url', image_url: { url: imageUrl } },
+                { type: 'text', text: '請辨識這張圖片中的商品資訊' },
+            ],
+        },
+    ];
+    const response = await callLlmApi(messages);
+    try {
+        const result = JSON.parse(response);
+        return {
+            name: result.name || null,
+            color: result.color || null,
+            size: result.size || null,
+            price: result.price ? Number(result.price) : null,
+            raw_text: result.raw_text || '',
+            confidence: result.confidence || 0,
+        };
+    }
+    catch {
+        throw new Error('Failed to parse image recognition result');
+    }
+}
 function buildSystemPrompt(paymentMethods, deliveryMethods, products) {
     const productList = products.map(p => {
         const variants = p.variants.map(v => `[${v.color || 'N/A'}/${v.size || 'N/A'}]`).join(', ');
@@ -173,7 +212,7 @@ function generateMockResult() {
         risk_flags: ['fuzzy_product_match'],
     };
 }
-async function extractOrderInfo(tenantId, conversationId, customerId, recentMessages) {
+async function extractOrderInfo(tenantId, conversationId, customerId, recentMessages, imageBase64) {
     if (!config_1.config.llm.apiKey) {
         console.log('[LLM Extraction] No API key configured, using mock result');
         return generateMockResult();
@@ -185,11 +224,11 @@ async function extractOrderInfo(tenantId, conversationId, customerId, recentMess
             }),
             prisma_1.prisma.product.findMany({
                 where: { tenantId, isActive: true },
-                take: 10,
+                take: 20,
                 include: {
                     variants: {
-                        select: { color: true, size: true, price: true },
-                        take: 5,
+                        where: { isActive: true },
+                        take: 10,
                     },
                 },
             }),
@@ -197,6 +236,17 @@ async function extractOrderInfo(tenantId, conversationId, customerId, recentMess
                 where: { id: customerId },
             }),
         ]);
+        let imageRecognitionResult = null;
+        if (imageBase64) {
+            try {
+                const imageResult = await recognizeProductFromImage(imageBase64);
+                imageRecognitionResult = imageResult;
+                console.log('[LLM Extraction] Image recognized:', imageResult);
+            }
+            catch (error) {
+                console.error('[LLM Extraction] Image recognition failed:', error);
+            }
+        }
         const paymentMethods = (() => {
             try {
                 const raw = storeSetting?.paymentMethods || '[]';

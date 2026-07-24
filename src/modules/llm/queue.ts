@@ -7,6 +7,7 @@ interface LlmTask {
   tenantId: string;
   customerId: string;
   lastMessage: string;
+  imageBase64?: string;
 }
 
 interface QueuedTask extends LlmTask {
@@ -61,7 +62,8 @@ async function processTask(task: LlmTask): Promise<void> {
       senderType: m.senderType,
       content: m.content,
       createdAt: m.createdAt,
-    }))
+    })),
+    task.imageBase64
   );
 
   console.log(`[LLM Queue] Extraction result: intent=${result.intent}, confidence=${result.confidence}, action=${result.draft_action}, items=${result.items.length}, missing=${result.missing_fields.join(',') || 'none'}`);

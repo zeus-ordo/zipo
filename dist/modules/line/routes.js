@@ -62,6 +62,9 @@ router.post('/webhook/:channelId', async (req, res) => {
             if (event.type === 'text' && event.source?.userId) {
                 await handleTextEvent(event, lineChannel.tenantId, lineChannel.channelId, lineChannel.channelAccessToken);
             }
+            else if (event.type === 'image' && event.source?.userId) {
+                await handleImageEvent(event, lineChannel.tenantId, lineChannel.channelId, lineChannel.channelAccessToken);
+            }
         }
         res.status(200).json({ status: 'ok' });
     }
@@ -156,6 +159,75 @@ async function handleTextEvent(event, tenantId, channelId, lineAccessToken) {
         customerId: customer.id,
         lastMessage: text,
     });
+}
+async function handleImageEvent(event, tenantId, channelId, lineAccessToken) {
+    const lineUserId = event.source?.userId;
+    const messageId = event.message?.id;
+    if (!lineUserId || !messageId)
+        return;
+    let imageBase64 = null;
+    let imageUrl = null;
+    if (lineAccessToken) {
+        try {
+            const response = await fetch(`https://api-data.line.me/v2/bot/message/${messageId}/content`, {
+                headers: {
+                    Authorization: `Bearer ${lineAccessToken}`,
+                },
+            });
+            if (response.ok) {
+                const buffer = await response.arrayBuffer();
+                imageBase64 = Buffer.from(buffer).toString('base64');
+                imageUrl = `https://api-data.line.me/v2/bot/message/${messageId}/content`;
+            }
+        }
+        catch (error) {
+            console.error('Failed to download LINE image:', error);
+        }
+    }
+    let customer = await prisma_1.prisma.customer.findFirst({
+        where: { tenantId, lineUserId },
+    });
+    if (!customer) {
+        customer = await prisma_1.prisma.customer.create({
+            data: {
+                tenantId,
+                lineUserId,
+            },
+        });
+    }
+    let conversation = await prisma_1.prisma.conversation.findFirst({
+        where: {
+            tenantId,
+            customerId: customer.id,
+        },
+        orderBy: { createdAt: 'desc' },
+    });
+    if (!conversation) {
+        conversation = await prisma_1.prisma.conversation.create({
+            data: {
+                tenantId,
+                customerId: customer.id,
+            },
+        });
+    }
+    await prisma_1.prisma.message.create({
+        data: {
+            conversationId: conversation.id,
+            senderType: 'customer',
+            content: null,
+            imageUrl,
+            imageBase64,
+        },
+    });
+    if (imageBase64) {
+        (0, queue_1.queueLlmExtraction)({
+            conversationId: conversation.id,
+            tenantId,
+            customerId: customer.id,
+            lastMessage: '',
+            imageBase64,
+        });
+    }
 }
 router.get('/settings', auth_1.authenticate, tenant_1.requireTenant, async (req, res) => {
     try {

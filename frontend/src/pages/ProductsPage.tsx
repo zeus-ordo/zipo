@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout } from '../components/Layout';
 import { productApi } from '../api/client';
-import { Package, Plus, Upload, Pencil, Trash2, X, Save } from 'lucide-react';
+import { Package, Plus, Upload, Pencil, Trash2, X, Save, Camera } from 'lucide-react';
 import type { Product, ProductVariant } from '../types';
 import toast from 'react-hot-toast';
 
@@ -13,6 +13,7 @@ export function ProductsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [importing, setImporting] = useState(false);
+  const [recognizingImage, setRecognizingImage] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -266,6 +267,57 @@ export function ProductsPage() {
     e.target.value = '';
   };
 
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      toast.error(t('products.invalid_image_type'));
+      e.target.value = '';
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(t('products.image_too_large'));
+      e.target.value = '';
+      return;
+    }
+
+    setRecognizingImage(true);
+    try {
+      const result = await productApi.recognizeImage(file);
+      setRecognizingImage(false);
+
+      setFormData({
+        name: result.data.data.name || formData.name,
+        sku: formData.sku,
+        category: formData.category,
+        description: formData.description,
+        basePrice: result.data.data.price?.toString() || formData.basePrice,
+      });
+
+      if (result.data.data.color || result.data.data.size) {
+        setVariants([{
+          id: undefined,
+          variantSku: '',
+          color: result.data.data.color || '',
+          size: result.data.data.size || '',
+          price: result.data.data.price?.toString() || '',
+        }]);
+      }
+
+      if (!showModal) {
+        setShowModal(true);
+      }
+      toast.success(t('products.image_recognized'));
+    } catch (err: any) {
+      setRecognizingImage(false);
+      toast.error(err.response?.data?.error || t('products.recognition_failed'));
+    }
+
+    e.target.value = '';
+  };
+
   const addVariant = () => {
     setVariants([...variants, { variantSku: '', color: '', size: '', price: '' }]);
   };
@@ -324,6 +376,14 @@ export function ProductsPage() {
             {importing ? t('common.loading') : t('products.import_excel')}
             <input type="file" accept=".xlsx,.xls,.csv" onChange={handleImport} className="hidden" disabled={importing} />
           </label>
+          <label
+            className="btn btn-secondary cursor-pointer"
+            style={{ cursor: 'pointer' }}
+          >
+            <Camera size={18} />
+            {recognizingImage ? t('common.loading') : t('products.recognize_from_image')}
+            <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleImageSelect} className="hidden" disabled={recognizingImage} />
+          </label>
           <button
             onClick={() => { resetForm(); }}
             className="btn btn-primary"
@@ -346,6 +406,7 @@ export function ProductsPage() {
           <table className="table">
             <thead>
               <tr>
+                <th className="w-16">{t('products.image')}</th>
                 <th>{t('products.product_name')}</th>
                 <th>{t('products.category')}</th>
                 <th>{t('products.variants')}</th>
@@ -357,6 +418,19 @@ export function ProductsPage() {
             <tbody>
               {products.map((product) => (
                 <tr key={product.id}>
+                  <td>
+                    {product.imageUrl ? (
+                      <img
+                        src={product.imageUrl}
+                        alt={product.name}
+                        className="w-12 h-12 object-cover rounded-lg"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--color-bg)' }}>
+                        <Package size={20} style={{ color: 'var(--color-text-tertiary)' }} />
+                      </div>
+                    )}
+                  </td>
                   <td>
                     <p className="font-medium" style={{ color: 'var(--color-text-primary)' }}>{product.name}</p>
                     <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>{t('products.sku')}: {product.sku || '-'}</p>

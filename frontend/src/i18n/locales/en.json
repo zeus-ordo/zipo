@@ -193,7 +193,13 @@
     "add_variant": "Add Variant",
     "delete_variant": "Delete Variant",
     "delete_product": "Delete Product",
-    "confirm_delete": "Confirm delete this product?"
+    "confirm_delete": "Confirm delete this product?",
+    "recognize_from_image": "Create from Image",
+    "invalid_image_type": "Only JPG, PNG, WEBP supported",
+    "image_too_large": "Image too large, max 5MB",
+    "image_recognized": "Auto-filled from image",
+    "recognition_failed": "Image recognition failed, please fill manually",
+    "image": "Image"
   },
   "conversations": {
     "title": "Conversations",

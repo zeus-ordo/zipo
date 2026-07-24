@@ -3,7 +3,9 @@ import multer from 'multer';
 import { authenticate } from '../../middleware/auth';
 import { requireTenant } from '../../middleware/tenant';
 import { parseExcelWithMapping, importProducts, ImportRow } from './import';
+import { recognizeProductFromImage } from './recognize';
 import { prisma } from '../../lib/prisma';
+import { checkFeatureEnabled } from '../../lib/subscription';
 
 const MAX_LIMIT = 100;
 const PAGE_SIZE_DEFAULT = 20;
@@ -12,6 +14,46 @@ const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
 router.use(authenticate, requireTenant);
+
+router.post('/recognize-image', upload.single('image'), async (req, res) => {
+  try {
+    const tenantId = req.user!.tenantId!;
+
+    const enabled = await checkFeatureEnabled(tenantId, 'imageRecognition');
+    if (!enabled) {
+      res.status(403).json({ error: 'Image recognition not enabled for your plan' });
+      return;
+    }
+
+    const file = req.file;
+    if (!file) {
+      res.status(400).json({ error: 'No image file provided' });
+      return;
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.mimetype)) {
+      res.status(400).json({ error: 'Only JPG, PNG, WEBP supported' });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      res.status(400).json({ error: 'File too large, max 5MB' });
+      return;
+    }
+
+    const base64 = file.buffer.toString('base64');
+    const result = await recognizeProductFromImage(base64);
+
+    res.json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.error('Image recognition error:', error);
+    res.status(500).json({ error: 'Recognition failed' });
+  }
+});
 
 router.get('/', async (req, res) => {
   try {

@@ -116,6 +116,23 @@ export const productApi = {
     api.post<{ success: number; failed: number; errors: string[] }>('/products/import', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
+  recognizeImage: (file: File) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    return api.post<{
+      success: boolean;
+      data: {
+        name: string | null;
+        color: string | null;
+        size: string | null;
+        price: number | null;
+        raw_text: string;
+        confidence: number;
+      };
+    }>('/products/recognize-image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
   createVariant: (productId: string, data: { variantSku?: string; color?: string; size?: string; price?: number }) =>
     api.post<ProductVariant>(`/products/${productId}/variants`, data),
   updateVariant: (productId: string, variantId: string, data: { variantSku?: string; color?: string; size?: string; price?: number }) =>

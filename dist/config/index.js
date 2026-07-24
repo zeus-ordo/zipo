@@ -28,5 +28,9 @@ exports.config = {
         apiKey: process.env.LLM_API_KEY || '',
         model: process.env.LLM_MODEL || '',
     },
+    storage: {
+        url: process.env.SUPABASE_URL || '',
+        key: process.env.SUPABASE_SERVICE_KEY || '',
+    },
     port: parseInt(process.env.PORT || '3000', 10),
 };
