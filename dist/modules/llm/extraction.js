@@ -4,32 +4,54 @@ exports.callLlmApi = callLlmApi;
 exports.extractOrderInfo = extractOrderInfo;
 exports.sendLineReply = sendLineReply;
 const config_1 = require("../../config");
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient({});
+const prisma_1 = require("../../lib/prisma");
+const LLM_TIMEOUT_MS = 30000;
+const MAX_RETRIES = 2;
 async function callLlmApi(messages) {
     if (!config_1.config.llm.apiKey) {
         throw new Error('LLM API key not configured');
     }
     const apiEndpoint = process.env.LLM_API_ENDPOINT || 'https://api.openai.com/v1/chat/completions';
-    const response = await fetch(apiEndpoint, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${config_1.config.llm.apiKey}`,
-        },
-        body: JSON.stringify({
-            model: config_1.config.llm.model || 'gpt-4o-mini',
-            messages,
-            temperature: 0.3,
-            response_format: { type: 'json_object' },
-        }),
+    const body = JSON.stringify({
+        model: config_1.config.llm.model || 'gpt-4o-mini',
+        messages,
+        temperature: 0.3,
     });
-    if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`LLM API error: ${response.status} - ${errorText}`);
+    let lastError = null;
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), LLM_TIMEOUT_MS);
+            const response = await fetch(apiEndpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${config_1.config.llm.apiKey}`,
+                },
+                body,
+                signal: controller.signal,
+            });
+            clearTimeout(timeoutId);
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`LLM API error: ${response.status} - ${errorText}`);
+            }
+            const data = await response.json();
+            return data.choices[0]?.message?.content || '';
+        }
+        catch (err) {
+            lastError = err instanceof Error ? err : new Error(String(err));
+            const isRetryable = lastError.message.includes('5') ||
+                lastError.message.includes('timeout') ||
+                lastError.message.includes('network') ||
+                lastError.message.includes('aborted');
+            if (!isRetryable || attempt === MAX_RETRIES) {
+                throw lastError;
+            }
+            await new Promise((r) => setTimeout(r, Math.pow(2, attempt) * 500));
+        }
     }
-    const data = await response.json();
-    return data.choices[0]?.message?.content || '';
+    throw lastError || new Error('LLM call failed');
 }
 function buildSystemPrompt(paymentMethods, deliveryMethods, products) {
     const productList = products.map(p => {
@@ -158,24 +180,41 @@ async function extractOrderInfo(tenantId, conversationId, customerId, recentMess
     }
     try {
         const [storeSetting, products, customer] = await Promise.all([
-            prisma.storeSetting.findFirst({
+            prisma_1.prisma.storeSetting.findFirst({
                 where: { tenantId },
             }),
-            prisma.product.findMany({
+            prisma_1.prisma.product.findMany({
                 where: { tenantId, isActive: true },
-                take: 20,
+                take: 10,
                 include: {
                     variants: {
-                        select: { color: true, size: true, basePrice: true },
+                        select: { color: true, size: true, price: true },
+                        take: 5,
                     },
                 },
             }),
-            prisma.customer.findUnique({
+            prisma_1.prisma.customer.findUnique({
                 where: { id: customerId },
             }),
         ]);
-        const paymentMethods = storeSetting?.paymentMethods || '';
-        const deliveryMethods = storeSetting?.deliveryMethods || '';
+        const paymentMethods = (() => {
+            try {
+                const raw = storeSetting?.paymentMethods || '[]';
+                return Array.isArray(raw) ? raw.join('、') : JSON.parse(raw).join('、');
+            }
+            catch {
+                return storeSetting?.paymentMethods || '';
+            }
+        })();
+        const deliveryMethods = (() => {
+            try {
+                const raw = storeSetting?.deliveryMethods || '[]';
+                return Array.isArray(raw) ? raw.join('、') : JSON.parse(raw).join('、');
+            }
+            catch {
+                return storeSetting?.deliveryMethods || '';
+            }
+        })();
         const productList = products.map((p) => ({
             id: p.id,
             name: p.name,
@@ -183,12 +222,18 @@ async function extractOrderInfo(tenantId, conversationId, customerId, recentMess
             variants: (p.variants || []).map((v) => ({
                 color: v.color,
                 size: v.size,
-                price: v.basePrice,
+                price: v.price,
             })),
         }));
         const systemPrompt = buildSystemPrompt(paymentMethods, deliveryMethods, productList);
         const userMessages = recentMessages
-            .map(m => `${m.senderType}: ${m.content}`)
+            .map(m => {
+            const sanitized = m.content
+                .replace(/\n/g, ' ')
+                .replace(/(\\{1,2}|")/g, (match) => match === '"' ? '\\"' : match)
+                .slice(0, 500);
+            return `${m.senderType}: ${sanitized}`;
+        })
             .join('\n');
         const messages = [
             { role: 'system', content: systemPrompt },
@@ -262,4 +307,3 @@ async function sendLineReply(channelAccessToken, userId, replyText) {
         console.error('Failed to send LINE reply:', await response.text());
     }
 }
-//# sourceMappingURL=extraction.js.map

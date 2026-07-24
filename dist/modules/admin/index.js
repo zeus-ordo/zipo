@@ -8,4 +8,3 @@ const routes_1 = __importDefault(require("./routes"));
 exports.adminRoutes = routes_1.default;
 const dashboard_1 = require("./dashboard");
 Object.defineProperty(exports, "dashboardRouter", { enumerable: true, get: function () { return dashboard_1.dashboardRouter; } });
-//# sourceMappingURL=index.js.map

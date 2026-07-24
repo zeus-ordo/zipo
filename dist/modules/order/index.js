@@ -13,12 +13,9 @@ var __createBinding = (this && this.__createBinding) || (Object.create ? (functi
 var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.orderRoutes = void 0;
+exports.orderRouter = exports.orderDraftRouter = void 0;
 __exportStar(require("./types"), exports);
 var routes_1 = require("./routes");
-Object.defineProperty(exports, "orderRoutes", { enumerable: true, get: function () { return __importDefault(routes_1).default; } });
-//# sourceMappingURL=index.js.map
+Object.defineProperty(exports, "orderDraftRouter", { enumerable: true, get: function () { return routes_1.orderDraftRouter; } });
+Object.defineProperty(exports, "orderRouter", { enumerable: true, get: function () { return routes_1.orderRouter; } });

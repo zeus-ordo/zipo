@@ -36,4 +36,3 @@ function requireRole(...roles) {
         next();
     };
 }
-//# sourceMappingURL=auth.js.map

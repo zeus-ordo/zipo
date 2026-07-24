@@ -1,16 +1,15 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const client_1 = require("@prisma/client");
 const auth_1 = require("../../middleware/auth");
 const tenant_1 = require("../../middleware/tenant");
-const prisma = new client_1.PrismaClient({});
+const prisma_1 = require("../../lib/prisma");
 const router = (0, express_1.Router)();
 router.use(auth_1.authenticate, tenant_1.requireTenant);
 router.get('/', async (req, res) => {
     try {
         const tenantId = req.user.tenantId;
-        const targets = await prisma.notificationTarget.findMany({
+        const targets = await prisma_1.prisma.notificationTarget.findMany({
             where: { tenantId, isActive: true },
             orderBy: { createdAt: 'desc' },
         });
@@ -33,7 +32,7 @@ router.post('/', async (req, res) => {
             res.status(400).json({ error: 'LINE 用戶 ID 或 Email 至少需要填寫一項' });
             return;
         }
-        const target = await prisma.notificationTarget.create({
+        const target = await prisma_1.prisma.notificationTarget.create({
             data: {
                 tenantId,
                 name,
@@ -42,7 +41,7 @@ router.post('/', async (req, res) => {
                 isActive: true,
             },
         });
-        await prisma.auditLog.create({
+        await prisma_1.prisma.auditLog.create({
             data: {
                 userId: req.user.userId,
                 tenantId,
@@ -63,7 +62,7 @@ router.patch('/:id', async (req, res) => {
         const { id } = req.params;
         const tenantId = req.user.tenantId;
         const { name, lineUserId, email } = req.body;
-        const existing = await prisma.notificationTarget.findFirst({
+        const existing = await prisma_1.prisma.notificationTarget.findFirst({
             where: { id, tenantId, isActive: true },
         });
         if (!existing) {
@@ -77,11 +76,11 @@ router.patch('/:id', async (req, res) => {
             updateData.lineUserId = lineUserId;
         if (email !== undefined)
             updateData.email = email;
-        const updated = await prisma.notificationTarget.update({
+        const updated = await prisma_1.prisma.notificationTarget.update({
             where: { id },
             data: updateData,
         });
-        await prisma.auditLog.create({
+        await prisma_1.prisma.auditLog.create({
             data: {
                 userId: req.user.userId,
                 tenantId,
@@ -102,18 +101,18 @@ router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const tenantId = req.user.tenantId;
-        const existing = await prisma.notificationTarget.findFirst({
+        const existing = await prisma_1.prisma.notificationTarget.findFirst({
             where: { id, tenantId, isActive: true },
         });
         if (!existing) {
             res.status(404).json({ error: '找不到通知設定' });
             return;
         }
-        await prisma.notificationTarget.update({
+        await prisma_1.prisma.notificationTarget.update({
             where: { id },
             data: { isActive: false, updatedAt: new Date() },
         });
-        await prisma.auditLog.create({
+        await prisma_1.prisma.auditLog.create({
             data: {
                 userId: req.user.userId,
                 tenantId,
@@ -130,4 +129,3 @@ router.delete('/:id', async (req, res) => {
     }
 });
 exports.default = router;
-//# sourceMappingURL=routes.js.map

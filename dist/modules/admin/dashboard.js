@@ -2,10 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.dashboardRouter = void 0;
 const express_1 = require("express");
-const client_1 = require("@prisma/client");
 const auth_1 = require("../../middleware/auth");
 const tenant_1 = require("../../middleware/tenant");
-const prisma = new client_1.PrismaClient({});
+const prisma_1 = require("../../lib/prisma");
 const router = (0, express_1.Router)();
 exports.dashboardRouter = router;
 router.use(auth_1.authenticate, tenant_1.requireTenant);
@@ -18,22 +17,22 @@ router.get('/stats', async (req, res) => {
         startOfMonth.setDate(1);
         startOfMonth.setHours(0, 0, 0, 0);
         const [todayOrders, pendingDrafts, readyToShip, monthOrders, totalCustomers] = await Promise.all([
-            prisma.order.count({
+            prisma_1.prisma.order.count({
                 where: { tenantId, createdAt: { gte: today } },
             }),
-            prisma.orderDraft.count({
+            prisma_1.prisma.orderDraft.count({
                 where: {
                     tenantId,
                     status: { in: ['draft_needs_review', 'draft_pending_info'] },
                 },
             }),
-            prisma.order.count({
+            prisma_1.prisma.order.count({
                 where: { tenantId, status: 'ready_to_ship' },
             }),
-            prisma.order.count({
+            prisma_1.prisma.order.count({
                 where: { tenantId, createdAt: { gte: startOfMonth } },
             }),
-            prisma.customer.count({
+            prisma_1.prisma.customer.count({
                 where: { tenantId },
             }),
         ]);
@@ -50,4 +49,3 @@ router.get('/stats', async (req, res) => {
         res.status(500).json({ error: '取得儀表板統計失敗' });
     }
 });
-//# sourceMappingURL=dashboard.js.map

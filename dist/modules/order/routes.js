@@ -1,30 +1,48 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.orderRouter = exports.orderDraftRouter = void 0;
 const express_1 = require("express");
-const client_1 = require("@prisma/client");
 const auth_1 = require("../../middleware/auth");
 const tenant_1 = require("../../middleware/tenant");
-const prisma = new client_1.PrismaClient({});
-const router = (0, express_1.Router)();
+const prisma_1 = require("../../lib/prisma");
+const MAX_LIMIT = 100;
+const PAGE_SIZE_DEFAULT = 20;
 const validTransitions = {
     confirmed: ['ready_to_ship', 'cancelled'],
     ready_to_ship: ['shipped', 'cancelled'],
     shipped: ['cancelled'],
     cancelled: [],
 };
-router.use(auth_1.authenticate, tenant_1.requireTenant);
-router.get('/order-drafts', async (req, res) => {
+function parseDraft(draft) {
+    return {
+        ...draft,
+        missingFields: (() => {
+            try {
+                return JSON.parse(draft.missingFields || '[]');
+            }
+            catch {
+                return [];
+            }
+        })(),
+    };
+}
+const orderDraftRouter = (0, express_1.Router)();
+exports.orderDraftRouter = orderDraftRouter;
+orderDraftRouter.use(auth_1.authenticate, tenant_1.requireTenant);
+orderDraftRouter.get('/', async (req, res) => {
     try {
         const tenantId = req.user.tenantId;
         const { status, page = '1', limit = '20' } = req.query;
-        const skip = (parseInt(page) - 1) * parseInt(limit);
-        const take = parseInt(limit);
+        const pageNum = Math.min(parseInt(page), MAX_LIMIT) || 1;
+        const limitNum = Math.min(parseInt(limit), MAX_LIMIT) || PAGE_SIZE_DEFAULT;
+        const skip = (pageNum - 1) * limitNum;
+        const take = limitNum;
         const where = { tenantId };
         if (status) {
             where.status = status;
         }
         const [drafts, total] = await Promise.all([
-            prisma.orderDraft.findMany({
+            prisma_1.prisma.orderDraft.findMany({
                 where,
                 skip,
                 take,
@@ -34,15 +52,15 @@ router.get('/order-drafts', async (req, res) => {
                     customer: true,
                 },
             }),
-            prisma.orderDraft.count({ where }),
+            prisma_1.prisma.orderDraft.count({ where }),
         ]);
         res.json({
-            data: drafts,
+            data: drafts.map((d) => parseDraft(d)),
             pagination: {
                 page: parseInt(page),
                 limit: parseInt(limit),
                 total,
-                totalPages: Math.ceil(total / take),
+                totalPages: Math.ceil(take ? total / take : 0),
             },
         });
     }
@@ -51,11 +69,11 @@ router.get('/order-drafts', async (req, res) => {
         res.status(500).json({ error: '取得訂單草稿失敗' });
     }
 });
-router.get('/order-drafts/:id', async (req, res) => {
+orderDraftRouter.get('/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const tenantId = req.user.tenantId;
-        const draft = await prisma.orderDraft.findFirst({
+        const draft = await prisma_1.prisma.orderDraft.findFirst({
             where: { id, tenantId },
             include: {
                 items: true,
@@ -67,19 +85,19 @@ router.get('/order-drafts/:id', async (req, res) => {
             res.status(404).json({ error: '找不到訂單草稿' });
             return;
         }
-        res.json(draft);
+        res.json(parseDraft(draft));
     }
     catch (error) {
         console.error('Error fetching order draft:', error);
         res.status(500).json({ error: '取得訂單草稿失敗' });
     }
 });
-router.patch('/order-drafts/:id', async (req, res) => {
+orderDraftRouter.patch('/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const tenantId = req.user.tenantId;
         const { items, status, summaryForStaff, replySuggestion } = req.body;
-        const existing = await prisma.orderDraft.findFirst({
+        const existing = await prisma_1.prisma.orderDraft.findFirst({
             where: { id, tenantId },
             include: { items: true },
         });
@@ -95,9 +113,9 @@ router.patch('/order-drafts/:id', async (req, res) => {
         if (replySuggestion !== undefined)
             updateData.replySuggestion = replySuggestion;
         if (items && Array.isArray(items)) {
-            for (const item of items) {
+            await Promise.all(items.map((item) => {
                 if (item.id) {
-                    await prisma.orderDraftItem.update({
+                    return prisma_1.prisma.orderDraftItem.update({
                         where: { id: item.id },
                         data: {
                             matchedProductId: item.matchedProductId,
@@ -113,9 +131,10 @@ router.patch('/order-drafts/:id', async (req, res) => {
                         },
                     });
                 }
-            }
+                return Promise.resolve();
+            }));
         }
-        const updated = await prisma.orderDraft.update({
+        const updated = await prisma_1.prisma.orderDraft.update({
             where: { id },
             data: updateData,
             include: {
@@ -123,7 +142,7 @@ router.patch('/order-drafts/:id', async (req, res) => {
                 customer: true,
             },
         });
-        await prisma.auditLog.create({
+        await prisma_1.prisma.auditLog.create({
             data: {
                 userId: req.user.userId,
                 tenantId,
@@ -133,20 +152,55 @@ router.patch('/order-drafts/:id', async (req, res) => {
                 metadata: JSON.stringify(req.body),
             },
         }).catch(console.error);
-        res.json(updated);
+        res.json(parseDraft(updated));
     }
     catch (error) {
         console.error('Error updating order draft:', error);
         res.status(500).json({ error: '更新訂單草稿失敗' });
     }
 });
-router.post('/order-drafts/:id/confirm', async (req, res) => {
+orderDraftRouter.patch('/:draftId/items/:itemId', async (req, res) => {
+    try {
+        const { draftId, itemId } = req.params;
+        const tenantId = req.user.tenantId;
+        const { matchedProductId, unitPrice } = req.body;
+        const draft = await prisma_1.prisma.orderDraft.findFirst({
+            where: { id: draftId, tenantId },
+        });
+        if (!draft) {
+            res.status(404).json({ error: '找不到訂單草稿' });
+            return;
+        }
+        const item = await prisma_1.prisma.orderDraftItem.findFirst({
+            where: { id: itemId, orderDraftId: draftId },
+        });
+        if (!item) {
+            res.status(404).json({ error: '找不到商品項目' });
+            return;
+        }
+        const updateData = { updatedAt: new Date() };
+        if (matchedProductId !== undefined)
+            updateData.matchedProductId = matchedProductId || null;
+        if (unitPrice !== undefined)
+            updateData.unitPrice = unitPrice;
+        const updated = await prisma_1.prisma.orderDraftItem.update({
+            where: { id: itemId },
+            data: updateData,
+        });
+        res.json(updated);
+    }
+    catch (error) {
+        console.error('Error updating order draft item:', error);
+        res.status(500).json({ error: '更新商品項目失敗' });
+    }
+});
+orderDraftRouter.post('/:id/confirm', async (req, res) => {
     try {
         const { id } = req.params;
         const tenantId = req.user.tenantId;
         const userId = req.user.userId;
         const { recipientName, recipientPhone, recipientAddress, deliveryMethod, paymentMethod } = req.body;
-        const draft = await prisma.orderDraft.findFirst({
+        const draft = await prisma_1.prisma.orderDraft.findFirst({
             where: { id, tenantId },
             include: {
                 items: true,
@@ -161,30 +215,35 @@ router.post('/order-drafts/:id/confirm', async (req, res) => {
             res.status(400).json({ error: '草稿狀態不正確，無法確認' });
             return;
         }
+        if (!draft.items || draft.items.length === 0) {
+            res.status(400).json({ error: '草稿中沒有商品項目，無法確認' });
+            return;
+        }
         if (!recipientPhone || !recipientAddress) {
             res.status(400).json({ error: '收件人電話和地址為必填欄位' });
             return;
         }
-        const order = await prisma.order.create({
-            data: {
-                tenantId,
-                orderDraftId: draft.id,
-                customerId: draft.customerId,
-                status: 'confirmed',
-                confirmedByUserId: userId,
-                confirmedAt: new Date(),
-                recipientName: recipientName || null,
-                recipientPhone,
-                recipientAddress,
-                deliveryMethod: deliveryMethod || null,
-                paymentMethod: paymentMethod || null,
-            },
-        });
-        for (const item of draft.items) {
-            await prisma.orderItem.create({
+        const order = await prisma_1.prisma.$transaction(async (tx) => {
+            const newOrder = await tx.order.create({
                 data: {
                     tenantId,
-                    orderId: order.id,
+                    orderDraftId: draft.id,
+                    conversationId: draft.conversationId,
+                    customerId: draft.customerId,
+                    status: 'confirmed',
+                    confirmedByUserId: userId,
+                    confirmedAt: new Date(),
+                    recipientName: recipientName || null,
+                    recipientPhone,
+                    recipientAddress,
+                    deliveryMethod: deliveryMethod || null,
+                    paymentMethod: paymentMethod || null,
+                },
+            });
+            await tx.orderItem.createMany({
+                data: draft.items.map((item) => ({
+                    tenantId,
+                    orderId: newOrder.id,
                     productId: item.matchedProductId,
                     variantId: item.matchedVariantId,
                     rawText: item.rawText,
@@ -195,21 +254,22 @@ router.post('/order-drafts/:id/confirm', async (req, res) => {
                     unitPrice: item.unitPrice,
                     lineTotal: item.quantity && item.unitPrice ? item.quantity * item.unitPrice : null,
                     isFuzzy: item.isFuzzy,
+                })),
+            });
+            await tx.orderDraft.delete({ where: { id } });
+            await tx.auditLog.create({
+                data: {
+                    userId,
+                    tenantId,
+                    action: 'CONFIRM_ORDER_DRAFT',
+                    entityType: 'Order',
+                    entityId: newOrder.id,
+                    metadata: JSON.stringify({ draftId: id }),
                 },
             });
-        }
-        await prisma.orderDraft.delete({ where: { id } });
-        await prisma.auditLog.create({
-            data: {
-                userId,
-                tenantId,
-                action: 'CONFIRM_ORDER_DRAFT',
-                entityType: 'Order',
-                entityId: order.id,
-                metadata: JSON.stringify({ draftId: id }),
-            },
-        }).catch(console.error);
-        const createdOrder = await prisma.order.findUnique({
+            return newOrder;
+        });
+        const createdOrder = await prisma_1.prisma.order.findUnique({
             where: { id: order.id },
             include: { items: true },
         });
@@ -220,19 +280,19 @@ router.post('/order-drafts/:id/confirm', async (req, res) => {
         res.status(500).json({ error: '確認訂單草稿失敗' });
     }
 });
-router.delete('/order-drafts/:id', async (req, res) => {
+orderDraftRouter.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const tenantId = req.user.tenantId;
-        const existing = await prisma.orderDraft.findFirst({
+        const existing = await prisma_1.prisma.orderDraft.findFirst({
             where: { id, tenantId },
         });
         if (!existing) {
             res.status(404).json({ error: '找不到訂單草稿' });
             return;
         }
-        await prisma.orderDraft.delete({ where: { id } });
-        await prisma.auditLog.create({
+        await prisma_1.prisma.orderDraft.delete({ where: { id } });
+        await prisma_1.prisma.auditLog.create({
             data: {
                 userId: req.user.userId,
                 tenantId,
@@ -248,18 +308,23 @@ router.delete('/order-drafts/:id', async (req, res) => {
         res.status(500).json({ error: '刪除訂單草稿失敗' });
     }
 });
-router.get('/orders', async (req, res) => {
+const orderRouter = (0, express_1.Router)();
+exports.orderRouter = orderRouter;
+orderRouter.use(auth_1.authenticate, tenant_1.requireTenant);
+orderRouter.get('/', async (req, res) => {
     try {
         const tenantId = req.user.tenantId;
         const { status, page = '1', limit = '20' } = req.query;
-        const skip = (parseInt(page) - 1) * parseInt(limit);
-        const take = parseInt(limit);
+        const pageNum = Math.min(parseInt(page), MAX_LIMIT) || 1;
+        const limitNum = Math.min(parseInt(limit), MAX_LIMIT) || PAGE_SIZE_DEFAULT;
+        const skip = (pageNum - 1) * limitNum;
+        const take = limitNum;
         const where = { tenantId };
         if (status) {
             where.status = status;
         }
         const [orders, total] = await Promise.all([
-            prisma.order.findMany({
+            prisma_1.prisma.order.findMany({
                 where,
                 skip,
                 take,
@@ -269,7 +334,7 @@ router.get('/orders', async (req, res) => {
                     customer: true,
                 },
             }),
-            prisma.order.count({ where }),
+            prisma_1.prisma.order.count({ where }),
         ]);
         res.json({
             data: orders,
@@ -277,7 +342,7 @@ router.get('/orders', async (req, res) => {
                 page: parseInt(page),
                 limit: parseInt(limit),
                 total,
-                totalPages: Math.ceil(total / take),
+                totalPages: Math.ceil(take ? total / take : 0),
             },
         });
     }
@@ -286,11 +351,11 @@ router.get('/orders', async (req, res) => {
         res.status(500).json({ error: '取得訂單失敗' });
     }
 });
-router.get('/orders/:id', async (req, res) => {
+orderRouter.get('/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const tenantId = req.user.tenantId;
-        const order = await prisma.order.findFirst({
+        const order = await prisma_1.prisma.order.findFirst({
             where: { id, tenantId },
             include: {
                 items: true,
@@ -308,7 +373,7 @@ router.get('/orders/:id', async (req, res) => {
         res.status(500).json({ error: '取得訂單失敗' });
     }
 });
-router.patch('/orders/:id/status', async (req, res) => {
+orderRouter.patch('/:id/status', async (req, res) => {
     try {
         const { id } = req.params;
         const tenantId = req.user.tenantId;
@@ -317,7 +382,7 @@ router.patch('/orders/:id/status', async (req, res) => {
             res.status(400).json({ error: '狀態為必填欄位' });
             return;
         }
-        const order = await prisma.order.findFirst({
+        const order = await prisma_1.prisma.order.findFirst({
             where: { id, tenantId },
         });
         if (!order) {
@@ -332,7 +397,7 @@ router.patch('/orders/:id/status', async (req, res) => {
             });
             return;
         }
-        const updated = await prisma.order.update({
+        const updated = await prisma_1.prisma.order.update({
             where: { id },
             data: {
                 status: newStatus,
@@ -343,7 +408,7 @@ router.patch('/orders/:id/status', async (req, res) => {
                 customer: true,
             },
         });
-        await prisma.auditLog.create({
+        await prisma_1.prisma.auditLog.create({
             data: {
                 userId: req.user.userId,
                 tenantId,
@@ -360,12 +425,12 @@ router.patch('/orders/:id/status', async (req, res) => {
         res.status(500).json({ error: '更新訂單狀態失敗' });
     }
 });
-router.patch('/orders/:id', async (req, res) => {
+orderRouter.patch('/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const tenantId = req.user.tenantId;
         const { recipientName, recipientPhone, recipientAddress, deliveryMethod, deliveryNote, paymentMethod, paymentStatus, paymentLastFiveDigits, paymentNote, staffNote, } = req.body;
-        const existing = await prisma.order.findFirst({
+        const existing = await prisma_1.prisma.order.findFirst({
             where: { id, tenantId },
         });
         if (!existing) {
@@ -393,7 +458,7 @@ router.patch('/orders/:id', async (req, res) => {
             updateData.paymentNote = paymentNote;
         if (staffNote !== undefined)
             updateData.staffNote = staffNote;
-        const updated = await prisma.order.update({
+        const updated = await prisma_1.prisma.order.update({
             where: { id },
             data: updateData,
             include: {
@@ -401,7 +466,7 @@ router.patch('/orders/:id', async (req, res) => {
                 customer: true,
             },
         });
-        await prisma.auditLog.create({
+        await prisma_1.prisma.auditLog.create({
             data: {
                 userId: req.user.userId,
                 tenantId,
@@ -418,5 +483,56 @@ router.patch('/orders/:id', async (req, res) => {
         res.status(500).json({ error: '更新訂單失敗' });
     }
 });
-exports.default = router;
-//# sourceMappingURL=routes.js.map
+orderRouter.patch('/:orderId/items/:itemId', async (req, res) => {
+    try {
+        const { orderId, itemId } = req.params;
+        const tenantId = req.user.tenantId;
+        const { unitPrice, quantity } = req.body;
+        const order = await prisma_1.prisma.order.findFirst({
+            where: { id: orderId, tenantId },
+        });
+        if (!order) {
+            res.status(404).json({ error: '找不到訂單' });
+            return;
+        }
+        const item = await prisma_1.prisma.orderItem.findFirst({
+            where: { id: itemId, orderId },
+        });
+        if (!item) {
+            res.status(404).json({ error: '找不到商品項目' });
+            return;
+        }
+        const updateData = { updatedAt: new Date() };
+        if (unitPrice !== undefined)
+            updateData.unitPrice = unitPrice;
+        if (quantity !== undefined)
+            updateData.quantity = quantity;
+        const updated = await prisma_1.prisma.orderItem.update({
+            where: { id: itemId },
+            data: updateData,
+        });
+        if (unitPrice !== undefined || quantity !== undefined) {
+            const newLineTotal = (updated.unitPrice || 0) * (updated.quantity || 0);
+            await prisma_1.prisma.orderItem.update({
+                where: { id: itemId },
+                data: { lineTotal: newLineTotal },
+            });
+        }
+        await prisma_1.prisma.auditLog.create({
+            data: {
+                userId: req.user.userId,
+                tenantId,
+                action: 'UPDATE_ORDER_ITEM',
+                entityType: 'OrderItem',
+                entityId: itemId,
+                metadata: JSON.stringify({ unitPrice, quantity }),
+            },
+        }).catch(console.error);
+        res.json(updated);
+    }
+    catch (error) {
+        console.error('Error updating order item:', error);
+        res.status(500).json({ error: '更新商品項目失敗' });
+    }
+});
+exports.default = orderRouter;

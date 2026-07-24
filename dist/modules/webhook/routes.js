@@ -1,0 +1,158 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.webhookRoutes = void 0;
+const express_1 = require("express");
+const utils_1 = require("../line/utils");
+const queue_1 = require("../llm/queue");
+const prisma_1 = require("../../lib/prisma");
+const router = (0, express_1.Router)();
+async function getLineUserProfile(lineAccessToken, userId) {
+    try {
+        const response = await fetch(`https://api.line.me/v2/bot/follower/${userId}/profile`, {
+            headers: {
+                'Authorization': `Bearer ${lineAccessToken}`,
+            },
+        });
+        if (!response.ok)
+            return null;
+        const data = await response.json();
+        return {
+            displayName: data.displayName || '',
+            pictureUrl: data.pictureUrl || '',
+        };
+    }
+    catch {
+        return null;
+    }
+}
+async function handleTextEvent(event, tenantId, channelId, lineAccessToken) {
+    const lineUserId = event.source.userId;
+    const text = event.text || event.message?.text || '';
+    if (!text)
+        return;
+    let customer = await prisma_1.prisma.customer.findFirst({
+        where: { tenantId, lineUserId },
+    });
+    if (!customer) {
+        let displayName = '';
+        let pictureUrl = '';
+        if (lineAccessToken && lineUserId) {
+            const profile = await getLineUserProfile(lineAccessToken, lineUserId);
+            if (profile) {
+                displayName = profile.displayName;
+                pictureUrl = profile.pictureUrl;
+            }
+        }
+        customer = await prisma_1.prisma.customer.create({
+            data: {
+                tenantId,
+                lineUserId,
+                lineDisplayName: displayName || null,
+                linePictureUrl: pictureUrl || null,
+            },
+        });
+    }
+    else if (!customer.lineDisplayName && lineAccessToken) {
+        const profile = await getLineUserProfile(lineAccessToken, lineUserId);
+        if (profile) {
+            customer = await prisma_1.prisma.customer.update({
+                where: { id: customer.id },
+                data: {
+                    lineDisplayName: profile.displayName,
+                    linePictureUrl: profile.pictureUrl,
+                },
+            });
+        }
+    }
+    let conversation = await prisma_1.prisma.conversation.findFirst({
+        where: {
+            tenantId,
+            customerId: customer.id,
+        },
+        orderBy: { createdAt: 'desc' },
+    });
+    if (!conversation) {
+        conversation = await prisma_1.prisma.conversation.create({
+            data: {
+                tenantId,
+                customerId: customer.id,
+            },
+        });
+    }
+    await prisma_1.prisma.message.create({
+        data: {
+            conversationId: conversation.id,
+            senderType: 'customer',
+            content: text,
+        },
+    });
+    (0, queue_1.queueLlmExtraction)({
+        conversationId: conversation.id,
+        tenantId,
+        customerId: customer.id,
+        lastMessage: text,
+    });
+}
+router.get('/:channelId', async (req, res) => {
+    console.log('[LINE Webhook] GET request received', req.params.channelId);
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('OK');
+});
+router.post('/:channelId', async (req, res) => {
+    console.log('[LINE Webhook] POST received', req.params.channelId);
+    res.status(200).json({ status: 'ok' });
+    const channelIdParam = req.params.channelId;
+    const channelId = Array.isArray(channelIdParam) ? channelIdParam[0] : channelIdParam;
+    const signature = req.headers['x-line-signature'];
+    const signatureStr = Array.isArray(signature) ? signature[0] : signature;
+    if (!signatureStr) {
+        console.log('[LINE Webhook] Missing signature');
+        return;
+    }
+    const lineChannel = await prisma_1.prisma.lineChannel.findUnique({
+        where: { channelId },
+        include: { tenant: true },
+    });
+    if (!lineChannel) {
+        console.log('[LINE Webhook] Channel not found:', channelId);
+        return;
+    }
+    console.log('[LINE Webhook] Channel found, tenantId:', lineChannel.tenantId);
+    const rawBody = JSON.stringify(req.body);
+    if (!(0, utils_1.verifyLineSignature)(lineChannel.channelSecret, rawBody, signatureStr)) {
+        console.log('[LINE Webhook] Invalid signature');
+        return;
+    }
+    const webhookRequest = req.body;
+    const events = webhookRequest.events || [];
+    console.log('[LINE Webhook] Events count:', events.length);
+    const textEvents = [];
+    for (const event of events) {
+        const eventId = event.webhookEventId || `${event.source?.userId}-${event.timestamp}`;
+        try {
+            await prisma_1.prisma.processedWebhookEvent.create({
+                data: {
+                    id: eventId,
+                    tenantId: lineChannel.tenantId,
+                    channelId: lineChannel.channelId,
+                },
+            });
+        }
+        catch {
+            console.log(`[LINE Webhook] Duplicate event ${eventId}, skipping`);
+            continue;
+        }
+        console.log('[LINE Webhook] Event type:', event.type, 'message type:', event.message?.type, 'userId:', event.source?.userId);
+        if (event.message?.type === 'text' && event.source?.userId) {
+            textEvents.push(event);
+        }
+    }
+    console.log('[LINE Webhook] Text events to process:', textEvents.length);
+    for (const event of textEvents) {
+        console.log('[LINE Webhook] Processing text event:', event.message?.text);
+        handleTextEvent(event, lineChannel.tenantId, lineChannel.channelId, lineChannel.channelAccessToken).catch((err) => {
+            console.error('[LINE Webhook] Error handling text event:', err);
+        });
+    }
+});
+exports.webhookRoutes = router;

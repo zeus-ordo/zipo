@@ -1,18 +1,17 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.notifyStoreNewDraft = notifyStoreNewDraft;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient({});
+const prisma_1 = require("../../lib/prisma");
 async function notifyStoreNewDraft(tenantId, draftId, summary) {
     try {
-        const lineChannel = await prisma.lineChannel.findFirst({
+        const lineChannel = await prisma_1.prisma.lineChannel.findFirst({
             where: { tenantId },
         });
         if (!lineChannel?.channelAccessToken) {
             console.log('[Notification] No LINE channel found for tenant:', tenantId);
             return;
         }
-        const notificationTargets = await prisma.notificationTarget.findMany({
+        const notificationTargets = await prisma_1.prisma.notificationTarget.findMany({
             where: {
                 tenantId,
                 isActive: true,
@@ -54,4 +53,3 @@ async function notifyStoreNewDraft(tenantId, draftId, summary) {
         console.error('[Notification] Error sending notification:', error);
     }
 }
-//# sourceMappingURL=notification.js.map

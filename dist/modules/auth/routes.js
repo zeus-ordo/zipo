@@ -6,11 +6,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const client_1 = require("@prisma/client");
 const config_1 = require("../../config");
 const auth_1 = require("../../middleware/auth");
 const tenant_1 = require("../tenant");
-const prisma = new client_1.PrismaClient({});
+const prisma_1 = require("../../lib/prisma");
 const router = (0, express_1.Router)();
 router.post('/login', async (req, res) => {
     try {
@@ -19,7 +18,7 @@ router.post('/login', async (req, res) => {
             res.status(400).json({ error: '信箱和密碼必填' });
             return;
         }
-        const user = await prisma.user.findUnique({
+        const user = await prisma_1.prisma.user.findUnique({
             where: { email, isActive: true },
         });
         if (!user || !(await bcryptjs_1.default.compare(password, user.passwordHash))) {
@@ -27,7 +26,7 @@ router.post('/login', async (req, res) => {
             return;
         }
         const token = jsonwebtoken_1.default.sign({ userId: user.id, tenantId: user.tenantId, role: user.role }, config_1.config.jwt.secret, { expiresIn: '7d' });
-        prisma.auditLog.create({
+        prisma_1.prisma.auditLog.create({
             data: {
                 userId: user.id,
                 tenantId: user.tenantId,
@@ -36,6 +35,27 @@ router.post('/login', async (req, res) => {
                 entityId: user.id,
             },
         }).catch(console.error);
+        // Auto-create subscription if tenant has none
+        if (user.tenantId) {
+            const existingSub = await prisma_1.prisma.subscription.findUnique({
+                where: { tenantId: user.tenantId },
+            });
+            if (!existingSub) {
+                const defaultPlan = await prisma_1.prisma.plan.findFirst({
+                    where: { isDefault: true },
+                });
+                if (defaultPlan) {
+                    await prisma_1.prisma.subscription.create({
+                        data: {
+                            tenantId: user.tenantId,
+                            planId: defaultPlan.id,
+                            status: 'active',
+                            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+                        },
+                    });
+                }
+            }
+        }
         const response = {
             user: {
                 id: user.id,
@@ -55,7 +75,7 @@ router.post('/login', async (req, res) => {
 });
 router.post('/register', async (req, res) => {
     try {
-        const { email, password, name, role, tenantId } = req.body;
+        const { email, password, name, role, tenantId, tenantName } = req.body;
         if (!email || !password || !name || !role) {
             res.status(400).json({ error: '所有欄位必填' });
             return;
@@ -68,27 +88,55 @@ router.post('/register', async (req, res) => {
             res.status(400).json({ error: '無效的角色' });
             return;
         }
-        if ((role === 'store_admin' || role === 'staff') && !tenantId) {
-            res.status(400).json({ error: '店家員工需要提供 tenantId' });
+        let finalTenantId = tenantId;
+        if ((role === 'store_admin' || role === 'staff') && !tenantId && !tenantName) {
+            res.status(400).json({ error: '店家員工需要提供 tenantId 或 tenantName' });
             return;
         }
-        const existing = await prisma.user.findUnique({ where: { email } });
+        if ((role === 'store_admin' || role === 'staff') && tenantName && !tenantId) {
+            const tenant = await prisma_1.prisma.tenant.create({
+                data: {
+                    name: tenantName,
+                    storeSettings: {
+                        create: {
+                            paymentMethods: '[]',
+                            deliveryMethods: '[]',
+                        },
+                    },
+                },
+            });
+            finalTenantId = tenant.id;
+            const defaultPlan = await prisma_1.prisma.plan.findFirst({
+                where: { isDefault: true },
+            });
+            if (defaultPlan) {
+                await prisma_1.prisma.subscription.create({
+                    data: {
+                        tenantId: tenant.id,
+                        planId: defaultPlan.id,
+                        status: 'active',
+                        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+                    },
+                });
+            }
+        }
+        const existing = await prisma_1.prisma.user.findUnique({ where: { email } });
         if (existing) {
             res.status(409).json({ error: '信箱已被註冊' });
             return;
         }
         const passwordHash = await bcryptjs_1.default.hash(password, 10);
-        const user = await prisma.user.create({
+        const user = await prisma_1.prisma.user.create({
             data: {
                 email,
                 passwordHash,
                 name,
                 role,
-                tenantId: role === 'platform_admin' ? null : tenantId,
+                tenantId: role === 'platform_admin' ? null : finalTenantId,
             },
         });
         const token = jsonwebtoken_1.default.sign({ userId: user.id, tenantId: user.tenantId, role: user.role }, config_1.config.jwt.secret, { expiresIn: '7d' });
-        prisma.auditLog.create({
+        prisma_1.prisma.auditLog.create({
             data: {
                 userId: user.id,
                 tenantId: user.tenantId,
@@ -120,7 +168,7 @@ router.get('/me', auth_1.authenticate, async (req, res) => {
             res.status(401).json({ error: '未授權' });
             return;
         }
-        const user = await prisma.user.findUnique({
+        const user = await prisma_1.prisma.user.findUnique({
             where: { id: req.user.userId },
         });
         if (!user || !user.isActive) {
@@ -142,4 +190,3 @@ router.get('/me', auth_1.authenticate, async (req, res) => {
 });
 router.use('/tenants', tenant_1.tenantRoutes);
 exports.default = router;
-//# sourceMappingURL=routes.js.map

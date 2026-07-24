@@ -10,4 +10,3 @@ function verifyLineSignature(channelSecret, body, signature) {
     const hash = hmac.update(body).digest('base64');
     return hash === signature;
 }
-//# sourceMappingURL=utils.js.map

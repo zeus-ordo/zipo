@@ -6,4 +6,3 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.notificationRoutes = void 0;
 const routes_1 = __importDefault(require("./routes"));
 exports.notificationRoutes = routes_1.default;
-//# sourceMappingURL=index.js.map

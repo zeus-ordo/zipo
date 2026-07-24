@@ -21,4 +21,3 @@ exports.authRoutes = void 0;
 __exportStar(require("./types"), exports);
 var routes_1 = require("./routes");
 Object.defineProperty(exports, "authRoutes", { enumerable: true, get: function () { return __importDefault(routes_1).default; } });
-//# sourceMappingURL=index.js.map

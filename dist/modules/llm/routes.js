@@ -26,4 +26,3 @@ router.post('/test-extraction', async (req, res) => {
     }
 });
 exports.default = router;
-//# sourceMappingURL=routes.js.map

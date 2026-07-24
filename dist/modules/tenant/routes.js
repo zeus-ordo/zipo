@@ -1,10 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const client_1 = require("@prisma/client");
 const auth_1 = require("../../middleware/auth");
 const auth_2 = require("../../middleware/auth");
-const prisma = new client_1.PrismaClient({});
+const prisma_1 = require("../../lib/prisma");
 const router = (0, express_1.Router)();
 router.use(auth_1.authenticate);
 router.use((0, auth_2.requireRole)('platform_admin'));
@@ -15,7 +14,7 @@ router.post('/', async (req, res) => {
             res.status(400).json({ error: '名稱必填' });
             return;
         }
-        const tenant = await prisma.tenant.create({
+        const tenant = await prisma_1.prisma.tenant.create({
             data: {
                 name,
                 storeSettings: {
@@ -29,6 +28,19 @@ router.post('/', async (req, res) => {
                 storeSettings: true,
             },
         });
+        const defaultPlan = await prisma_1.prisma.plan.findFirst({
+            where: { isDefault: true },
+        });
+        if (defaultPlan) {
+            await prisma_1.prisma.subscription.create({
+                data: {
+                    tenantId: tenant.id,
+                    planId: defaultPlan.id,
+                    status: 'active',
+                    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+                },
+            });
+        }
         res.status(201).json({
             id: tenant.id,
             name: tenant.name,
@@ -44,7 +56,7 @@ router.post('/', async (req, res) => {
 });
 router.get('/', async (req, res) => {
     try {
-        const tenants = await prisma.tenant.findMany({
+        const tenants = await prisma_1.prisma.tenant.findMany({
             where: { isActive: true },
             orderBy: { createdAt: 'desc' },
         });
@@ -63,7 +75,7 @@ router.get('/', async (req, res) => {
 });
 router.get('/:id', async (req, res) => {
     try {
-        const tenant = await prisma.tenant.findUnique({
+        const tenant = await prisma_1.prisma.tenant.findUnique({
             where: { id: req.params.id },
         });
         if (!tenant) {
@@ -91,7 +103,7 @@ router.patch('/:id', async (req, res) => {
             data.name = name;
         if (isActive !== undefined)
             data.isActive = isActive;
-        const tenant = await prisma.tenant.update({
+        const tenant = await prisma_1.prisma.tenant.update({
             where: { id: req.params.id },
             data,
         });
@@ -110,7 +122,7 @@ router.patch('/:id', async (req, res) => {
 });
 router.delete('/:id', async (req, res) => {
     try {
-        await prisma.tenant.update({
+        await prisma_1.prisma.tenant.update({
             where: { id: req.params.id },
             data: { isActive: false },
         });
@@ -122,4 +134,3 @@ router.delete('/:id', async (req, res) => {
     }
 });
 exports.default = router;
-//# sourceMappingURL=routes.js.map

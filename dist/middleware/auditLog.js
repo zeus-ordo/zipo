@@ -1,13 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createAuditLog = createAuditLog;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient({});
+const prisma_1 = require("../lib/prisma");
 function createAuditLog(action, entityType, entityId) {
     return async (req, _res, next) => {
         const userId = req.user?.userId || null;
         const tenantId = req.user?.tenantId || null;
-        prisma.auditLog.create({
+        prisma_1.prisma.auditLog.create({
             data: {
                 userId,
                 tenantId,
@@ -21,4 +20,3 @@ function createAuditLog(action, entityType, entityId) {
         next();
     };
 }
-//# sourceMappingURL=auditLog.js.map

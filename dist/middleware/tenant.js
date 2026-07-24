@@ -16,4 +16,3 @@ function requireTenant(req, res, next) {
 function optionalTenant(req, _res, next) {
     next();
 }
-//# sourceMappingURL=tenant.js.map

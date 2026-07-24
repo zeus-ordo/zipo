@@ -2,7 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import { authenticate } from '../../middleware/auth';
 import { requireTenant } from '../../middleware/tenant';
-import { parseExcelFile, importProducts, ImportRow } from './import';
+import { parseExcelWithMapping, importProducts, ImportRow } from './import';
 import { prisma } from '../../lib/prisma';
 
 const MAX_LIMIT = 100;
@@ -384,7 +384,7 @@ router.post('/import', upload.single('file'), async (req, res) => {
       return;
     }
 
-    const rows = await parseExcelFile(file.buffer);
+    const { rows, mapping, headers } = parseExcelWithMapping(file.buffer);
 
     if (rows.length === 0) {
       res.status(400).json({ error: '檔案中沒有資料' });
@@ -392,6 +392,8 @@ router.post('/import', upload.single('file'), async (req, res) => {
     }
 
     const result = await importProducts(tenantId, rows as ImportRow[]);
+
+    const detectedFields = Object.values(mapping).filter((v, i, a) => a.indexOf(v) === i);
 
     await prisma.auditLog.create({
       data: {
@@ -408,6 +410,7 @@ router.post('/import', upload.single('file'), async (req, res) => {
       success: result.success,
       failed: result.failed,
       errors: result.errors,
+      detectedFields,
     });
   } catch (error) {
     console.error('Error importing products:', error);

@@ -6,6 +6,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.config = void 0;
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
+const isProduction = process.env.NODE_ENV === 'production';
+const jwtSecret = process.env.JWT_SECRET;
+if (!jwtSecret) {
+    if (isProduction) {
+        throw new Error('JWT_SECRET environment variable is required in production');
+    }
+    console.warn('WARNING: Using default JWT secret in non-production environment');
+}
 exports.config = {
     databaseUrl: process.env.DATABASE_URL || 'file:./dev.db',
     line: {
@@ -14,7 +22,7 @@ exports.config = {
         accessToken: process.env.LINE_ACCESS_TOKEN || '',
     },
     jwt: {
-        secret: process.env.JWT_SECRET || 'default-secret-change-in-production',
+        secret: jwtSecret || 'dev-only-secret-do-not-use-in-production',
     },
     llm: {
         apiKey: process.env.LLM_API_KEY || '',
@@ -22,4 +30,3 @@ exports.config = {
     },
     port: parseInt(process.env.PORT || '3000', 10),
 };
-//# sourceMappingURL=index.js.map
